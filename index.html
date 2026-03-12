@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clubsito de lectura - Review Zone</title>
+    <!-- Favicon inline para evitar 404 en favicon.ico -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%236b4f3f'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' font-size='26' fill='%23f9f3e5' font-family='sans-serif'%3E📖%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Sniglet&family=Averia+Libre:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+                <div class="nav-left">
+                    <div class="nav-brand">📖 Review Zone</div>
+                    <button id="nav-toggle" class="nav-toggle" aria-label="Mostrar u ocultar menú">
+                        ☰
+                    </button>
+                </div>
+            <div class="user-auth-section">
+                <div id="auth-guest" class="auth-group">
+                    <button id="login-btn" class="mini-btn">Iniciar Sesión 🔑</button>
+                    <button id="register-btn" class="mini-btn">Registrarse ✨</button>
+                </div>
+                <div id="auth-user" class="auth-group" style="display: none;">
+                    <span id="user-display" class="user-name-label">¡Hola, Lector! 📖</span>
+                    <button id="new-entry-btn" class="mini-btn">Nueva Entrada ✨</button>
+                    <button id="my-reviews-btn" class="mini-btn">Mis Libros 📚</button>
+                    <button id="logout-btn" class="mini-btn">Salir 🚪</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="capture-area">
+        <div class="journal-page">
+            <header class="journal-header">
+                <div class="title-section">
+                    <h1 class="main-title">BOOK</h1>
+                    <h1 class="main-title">REVIEW</h1>
+                </div>
+                <div class="quote-container">
+                    <div class="quote-box">
+                        <label for="fav-quote">FRASE FAVORITA:</label>
+                        <textarea id="fav-quote" placeholder="&ldquo;Escribe aquí esa frase que te marcó...&rdquo;" required="true"></textarea>
+                    </div>
+                </div>
+            </header>
+
+            <section class="main-content">
+                <div class="content-left">
+                    <div class="photo-box" id="photo-box">
+                        <div class="photo-content" id="photo-preview">
+                            <span class="photo-label">PORTADA</span>
+                            <span class="photo-label">AQUÍ</span>
+                        </div>
+                    </div>
+                    <button type="button" id="search-cover-btn" class="journal-btn">BUSCAR PORTADA ✨</button>
+                    
+                    <div class="about-section">
+                        <h2 class="sub-title">SOBRE EL LIBRO</h2>
+                        <div class="pill-inputs">
+                            <div class="pill-input">
+                                <label for="title">Título:</label>
+                                <textarea id="title" rows="1" required="true"></textarea>
+                            </div>
+                            <div class="pill-input">
+                                <label for="author">Autor:</label>
+                                <textarea id="author" rows="1" required="true" required="true"></textarea>
+                            </div>
+                            <div class="pill-input checkbox-group-vertical">
+                                <label for="recommend">¿Lo recomendarías?</label>
+                                <label class="checkbox-wrapper-vertical clickable-label" for="recommend">
+                                    <input type="checkbox" id="recommend" class="journal-checkbox" required="true">
+                                    <span class="checkbox-label" id="recommend-text">No</span>
+                                </label>
+                            </div>
+                            <div class="pill-input">
+                                <label for="start-date">Iniciado:</label>
+                                <input type="text" id="start-date" placeholder="DD/MM/AA" required="true">
+                            </div>
+                            <div class="pill-input">
+                                <label for="end-date">Terminado:</label>
+                                <input type="text" id="end-date" placeholder="DD/MM/AA" required="true">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-right">
+                    <div class="rate-section">
+                        <h3 class="rate-label">CALIFICACIÓN</h3>
+                        <div class="star-rating" id="star-rating" data-rating="0">
+                            <div class="star-cell" data-index="1">
+                                <div class="star-hitbox left" data-value="0.5"></div>
+                                <div class="star-hitbox right" data-value="1.0"></div>
+                                <div class="star-visual">
+                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    <div class="star-fill-wrapper">
+                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="star-cell" data-index="2">
+                                <div class="star-hitbox left" data-value="1.5"></div>
+                                <div class="star-hitbox right" data-value="2.0"></div>
+                                <div class="star-visual">
+                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    <div class="star-fill-wrapper">
+                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="star-cell" data-index="3">
+                                <div class="star-hitbox left" data-value="2.5"></div>
+                                <div class="star-hitbox right" data-value="3.0"></div>
+                                <div class="star-visual">
+                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    <div class="star-fill-wrapper">
+                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="star-cell" data-index="4">
+                                <div class="star-hitbox left" data-value="3.5"></div>
+                                <div class="star-hitbox right" data-value="4.0"></div>
+                                <div class="star-visual">
+                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    <div class="star-fill-wrapper">
+                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="star-cell" data-index="5">
+                                <div class="star-hitbox left" data-value="4.5"></div>
+                                <div class="star-hitbox right" data-value="5.0"></div>
+                                <div class="star-visual">
+                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    <div class="star-fill-wrapper">
+                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3 class="review-label">RESEÑA</h3>
+                        <div class="review-box">
+                            <textarea id="review-text" placeholder="Escribe aquí tu reseña..." required="true"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="music-section">
+                        <div class="music-header">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="music-icon">🎵</span>
+                                <span class="music-label">SOUNDTRACK</span>
+                            </div>
+                            <button type="button" id="music-reset-btn" class="mini-btn" style="display: none; font-size: 0.8em; padding: 4px 8px;">Cambiar 🔄</button>
+                        </div>
+                        <div class="music-input-group">
+                            <input type="text" id="music-link" placeholder="Pega link de Spotify (Recomendado)">
+                            <button type="button" id="music-file-trigger" class="mini-btn" title="Cargar archivo MP3 (Garantizado)">📁</button>
+                            <input type="file" id="music-file" hidden accept="audio/*">
+                        </div>
+                        
+                        <div id="player-container" class="player-container">
+                            <div id="custom-player" class="custom-player" style="display: none;">
+                                <div class="player-controls">
+                                    <button type="button" id="play-pause-btn" class="control-btn">▶️</button>
+                                    <div class="progress-section">
+                                        <input type="range" id="progress-bar" value="0" step="0.1" class="custom-range">
+                                    </div>
+                                    <div class="volume-section">
+                                        <span class="vol-icon">🔊</span>
+                                        <input type="range" id="volume-bar" value="80" step="1" class="custom-range volume-slider">
+                                    </div>
+                                </div>
+                                <div id="track-name-display" class="track-name-mini">Nombre de la canción</div>
+                            </div>
+                            <div id="spotify-container" style="display: none; width: 100%;"></div>
+                            <div id="no-player-msg" class="no-player">Usa Spotify o un archivo local para mejor experiencia</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <div class="action-footer">
+        <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none;">GUARDAR EN MIS LIBROS 💾</button>
+        <button type="button" id="share-whatsapp-btn" class="share-btn">COPIAR AL PORTAPAPELES 📋</button>
+    </div>
+
+    <!-- Modales de Autenticación -->
+    <div id="auth-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page">
+            <span class="close-modal">&times;</span>
+            <h2 id="modal-title" class="sub-title">Iniciar Sesión</h2>
+            <form id="auth-form" class="pill-inputs auth-form-wide">
+                <div class="pill-input">
+                    <label for="auth-username">Usuario:</label>
+                    <input type="text" id="auth-username" placeholder="Tu nombre de usuario">
+                </div>
+                <div class="pill-input password-input-wrapper">
+                    <label for="auth-password">Contraseña:</label>
+                    <input type="password" id="auth-password" placeholder="Tu contraseña">
+                    <button type="button" id="toggle-password" class="toggle-password-btn">👁️</button>
+                </div>
+                <button type="submit" id="auth-submit-btn" class="journal-btn">ENTRAR ✨</button>
+                <p id="auth-switch" class="auth-switch-text">¿No tienes cuenta? <span id="switch-to-register">Regístrate aquí</span></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Mis Reseñas -->
+    <div id="reviews-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 800px;">
+            <span class="close-modal">&times;</span>
+            <h2 class="sub-title">MIS RESEÑAS GUARDADAS</h2>
+            <div id="reviews-list" class="reviews-grid">
+                <p class="no-player">Cargando tus libros...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de feedback (bienvenida / despedida) -->
+    <div id="feedback-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 420px; text-align: center;">
+            <h2 class="sub-title" id="feedback-title">¡Bienvenido!</h2>
+            <p id="feedback-message" class="auth-switch-text" style="margin-top: 10px;">
+                Nos alegra tenerte de vuelta en tu Diario de Libros.
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
