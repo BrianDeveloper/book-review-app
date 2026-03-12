@@ -1374,11 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         .select('id, title, author')
 
-                        .eq('user_id', currentUser.id)
-
-                        .eq('title', titleVal)
-
-                        .eq('author', authorVal);
+                        .eq('user_id', currentUser.id);
 
                     
 
@@ -1388,9 +1384,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (existingReviews && existingReviews.length > 0) {
 
-                        showToast('Ya tienes una reseña para este libro. Solo puedes tener una reseña por libro. 📚', 'warning');
+                        // Comprobar si coincide el título O el autor con similitud
+                        const isDuplicate = existingReviews.some(review => {
 
-                        return;
+                            const titleSimilarity = calculateSimilarity(review.title, titleVal);
+                            const authorSimilarity = calculateSimilarity(review.author, authorVal);
+                            
+                            // Umbral de similitud: 0.8 (80% similar)
+                            return titleSimilarity >= 0.8 || authorSimilarity >= 0.8;
+                        });
+
+                        
+
+                        if (isDuplicate) {
+
+                            showToast('Ya tienes una reseña para este libro. Solo puedes tener una reseña por libro. 📚', 'warning');
+
+                            return;
+
+                        }
 
                     }
 
@@ -2301,6 +2313,106 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     }
+
+
+
+    // --- Similitud de texto para detección de duplicados ---
+
+    const calculateSimilarity = (str1, str2) => {
+
+        // Convertir a minúsculas y eliminar espacios extra
+
+        const s1 = str1.toLowerCase().trim();
+
+        const s2 = str2.toLowerCase().trim();
+
+
+
+        // Si son exactamente iguales, similitud 100%
+
+        if (s1 === s2) return 1.0;
+
+
+
+        // Si uno está contenido en el otro, alta similitud
+
+        if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+
+
+
+        // Calcular distancia de Levenshtein simplificada
+
+        const longer = s1.length > s2.length ? s1 : s2;
+
+        const shorter = s1.length > s2.length ? s2 : s1;
+
+
+
+        if (longer.length === 0) return 1.0;
+
+        
+
+        const editDistance = levenshteinDistance(longer, shorter);
+
+        return (longer.length - editDistance) / longer.length;
+
+    };
+
+
+
+    const levenshteinDistance = (str1, str2) => {
+
+        const matrix = [];
+
+
+
+        for (let i = 0; i <= str2.length; i++) {
+
+            matrix[i] = [i];
+
+        }
+
+
+
+        for (let j = 0; j <= str1.length; j++) {
+
+            matrix[0][j] = j;
+
+        }
+
+
+
+        for (let i = 1; i <= str2.length; i++) {
+
+            for (let j = 1; j <= str1.length; j++) {
+
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+
+                    matrix[i][j] = matrix[i - 1][j - 1];
+
+                } else {
+
+                    matrix[i][j] = Math.min(
+
+                        matrix[i - 1][j - 1] + 1,
+
+                        matrix[i][j - 1] + 1,
+
+                        matrix[i - 1][j] + 1
+
+                    );
+
+                }
+
+            }
+
+        }
+
+
+
+        return matrix[str2.length][str1.length];
+
+    };
 
 
 
