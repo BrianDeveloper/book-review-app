@@ -1752,7 +1752,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-resize all
 
-        ['title', 'author', 'review-text', 'fav-quote', 'start-date', 'end-date'].forEach(id => {
+        ['title', 'author', 'review-text', 'fav-quote', 'start-date', 'end-date', 'fav-character'].forEach(id => {
 
             const el = document.getElementById(id);
 
@@ -2191,7 +2191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Resize all empty
 
-        ['title', 'author', 'review-text', 'fav-quote', 'start-date', 'end-date'].forEach(id => {
+        ['title', 'author', 'review-text', 'fav-quote', 'start-date', 'end-date', 'fav-character'].forEach(id => {
 
             const el = document.getElementById(id);
 

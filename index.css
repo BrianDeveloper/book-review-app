@@ -907,8 +907,9 @@ body {
     .review-box textarea {
         font-size: 1.2rem;
         line-height: 30px;
-        background-position: 0 16px;
+        background-image: linear-gradient(transparent 29px, var(--border-color) 1px);
         background-size: 100% 30px;
+        background-position: 0 16px;
         padding: 20px;
     }
 
