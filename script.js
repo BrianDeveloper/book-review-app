@@ -1058,21 +1058,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (registerBtn) registerBtn.addEventListener('click', () => openModal('register'));
 
-
-
     // Toggle navbar en pantallas pequeñas
-
     if (navToggle && navbar) {
-
         navToggle.addEventListener('click', () => {
-
             navbar.classList.toggle('nav-open');
-
         });
 
+        // Cerrar el menú al clickear cualquier botón dentro (mejor UX en móviles)
+        navbar.querySelectorAll('.mini-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                navbar.classList.remove('nav-open');
+            });
+        });
     }
-
-
 
     closeModalElements.forEach(el => el.addEventListener('click', () => {
 

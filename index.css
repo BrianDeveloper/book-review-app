@@ -13,6 +13,12 @@
     padding: 0;
 }
 
+html, body {
+    overflow-x: hidden; /* Prevent horizontal scroll globally */
+    width: 100%;
+    position: relative;
+}
+
 body {
     background-color: #e8dfcc; /* Darker beige for body background */
     color: var(--text-color);
@@ -113,12 +119,6 @@ body {
     gap: 10px;
 }
 
-.user-name-label {
-    font-family: var(--font-pill);
-    font-size: 1.1rem;
-    color: var(--bg-color);
-}
-
 .main-title {
     font-size: 5rem;
     line-height: 0.9;
@@ -127,6 +127,7 @@ body {
 
 .quote-container {
     width: 400px;
+    max-width: 100%;
 }
 
 .quote-box {
@@ -792,33 +793,74 @@ body {
         max-width: 100%;
     }
 
-    .main-content {
-        grid-template-columns: 1fr;
-        gap: 25px;
+    /* Ajustes de layout general para vista vertical */
+    body {
+        padding: 80px 10px 30px; 
+    }
+
+    .journal-page {
+        padding: 40px 15px; 
+        border-radius: 20px;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none; /* Shadow can sometimes cause overflow or look weird on small screens */
+    }
+
+    .journal-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+        margin-bottom: 30px;
     }
 
     .main-title {
-        font-size: 2.8rem;
-        word-break: break-all; /* Evita que títulos largos rompan el ancho */
+        font-size: 3rem;
+        word-break: normal;
     }
 
     .quote-container {
         width: 100%;
-        max-width: 100%;
+        order: 2; /* In mockup: Title -> Quote -> Cover */
     }
 
     .quote-box {
         height: auto;
-        min-height: 120px;
-        padding: 10px;
+        min-height: 100px;
+        padding: 15px;
+    }
+
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        width: 100%;
+    }
+
+    .content-left {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
     }
 
     .photo-box {
         width: 100%;
-        max-width: 100%; /* Permite que se encoja */
+        max-width: 280px;
         height: auto;
-        aspect-ratio: 2/3; /* Mantiene proporción sin altura fija */
+        aspect-ratio: 2/3;
         margin: 0 auto 20px auto;
+        order: 3; /* Title -> Quote -> Cover */
+    }
+
+    .journal-btn {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto 20px auto;
+        order: 4;
+    }
+
+    .about-section {
+        order: 5;
+        width: 100%;
     }
 
     .about-section .pill-inputs {
@@ -828,78 +870,58 @@ body {
     }
 
     .pill-input {
-        padding: 0 12px;
-        gap: 8px;
-        min-height: 45px;
+        padding: 10px 15px;
+        gap: 10px;
+        min-height: 40px;
         width: 100%;
     }
 
     .pill-input label,
-    .pill-input input,
-    .pill-input textarea {
-        font-size: 1.2rem;
+    .pill-input textarea,
+    .pill-input input {
+        font-size: 1.1rem;
     }
 
-    /* ESTRELLAS: Factor crítico de desbordamiento */
+    .pill-input label {
+        min-width: fit-content;
+    }
+
+    /* ESTRELLAS: Prevent overflow at 320px */
     .star-rating {
-        gap: 5px;
+        gap: 4px;
+        flex-wrap: nowrap;
+        width: 100%;
+        justify-content: center;
     }
 
-    .star-cell {
-        width: 45px; /* Reducido de 60px para que 5 quepan en ~250px */
-        height: 45px;
-    }
-
-    .star-svg {
-        width: 45px;
-        height: 45px;
+    .star-cell, .star-svg {
+        width: 40px;
+        height: 40px;
     }
 
     .review-box {
-        height: auto;
-        min-height: 300px;
+        height: 350px;
         border-radius: 20px;
-        width: 100%;
     }
 
     .review-box textarea {
-        font-size: 1.3rem; /* Ligeramente más pequeño */
+        font-size: 1.2rem;
         line-height: 30px;
-        background-position: 0 18px;
+        background-position: 0 16px;
         background-size: 100% 30px;
-        padding: 15px;
+        padding: 20px;
     }
 
-    .music-section {
-        margin-top: 10px;
-        padding: 12px;
-        width: 100%;
-    }
-
-    .music-input-group {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    #music-link {
-        width: 100%;
-    }
-
-    /* Botones de acción */
     .action-footer {
         flex-direction: column;
-        align-items: stretch;
-        gap: 0.8rem;
         padding: 0 10px;
-        margin-top: 20px;
-        width: 100%;
+        gap: 15px;
     }
 
     .share-btn {
         width: 100%;
         justify-content: center;
         font-size: 1.1rem;
-        padding: 10px 15px;
     }
 
     /* Navbar colapsable */
@@ -915,13 +937,14 @@ body {
         padding: 10px 20px 12px;
         background-color: var(--border-color);
         border-top: 1px solid rgba(0, 0, 0, 0.1);
-        display: none;
+        display: none; /* Oculto por defecto en móvil */
         justify-content: flex-end;
         gap: 8px;
+        z-index: 1001;
     }
 
     .navbar.nav-open .user-auth-section {
-        display: flex;
+        display: flex; /* Se muestra al abrir el menú */
         flex-wrap: wrap;
     }
 
