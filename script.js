@@ -1119,10 +1119,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // Botones visibles solo con sesión iniciada
-
-        if (saveReviewBtn) saveReviewBtn.style.display = user ? 'block' : 'none';
-
-        if (shareBtn) shareBtn.style.display = user ? 'inline-flex' : 'none';
+        if (saveReviewBtn) saveReviewBtn.style.setProperty('display', user ? 'block' : 'none', 'important');
+        if (shareBtn) shareBtn.style.setProperty('display', user ? 'inline-flex' : 'none', 'important');
 
         if (user && userDisplay) {
 
@@ -1444,7 +1442,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 music_link: musicLink.value,
 
-                music_info: JSON.stringify(currentTrackInfo)
+                music_info: JSON.stringify(currentTrackInfo),
+
+                fav_character: document.getElementById('fav-character')?.value.trim() || ''
 
             };
 
@@ -1611,6 +1611,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         }
+
+
+
+        const fc = document.getElementById('fav-character');
+
+        if (fc) fc.value = review.fav_character || '';
 
 
 
@@ -1972,7 +1978,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (authorInput) authorInput.value = '';
 
-        const fields = ['review-text', 'fav-quote', 'start-date', 'end-date'];
+        const fields = ['review-text', 'fav-quote', 'start-date', 'end-date', 'fav-character'];
 
         fields.forEach(id => {
 
@@ -2068,12 +2074,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            // Mostrar botón de guardar
-
+            // Mostrar botón de guardar solo si hay sesión
             if (saveReviewBtn) {
-
-                saveReviewBtn.style.display = 'block';
-
+                saveReviewBtn.style.setProperty('display', currentUser ? 'block' : 'none', 'important');
             }
 
 
@@ -2576,7 +2579,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    ['title', 'author', 'fav-quote', 'auth-username', 'review-text'].forEach(id => {
+    ['title', 'author', 'fav-quote', 'auth-username', 'review-text', 'fav-character'].forEach(id => {
 
         const ta = document.getElementById(id);
 

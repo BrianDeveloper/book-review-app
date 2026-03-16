@@ -390,14 +390,14 @@ body {
 
 .pill-input {
     display: flex;
-    align-items: center; /* Centered vertically for better click feel */
+    align-items: flex-start; /* Permite que el contenedor crezca hacia abajo */
     background-color: transparent;
     border: 3px solid var(--border-color);
     border-radius: 25px;
-    padding: 0 20px; /* Vertical padding removed to let inputs fill height */
+    padding: 12px 20px; /* Añade padding vertical */
     gap: 15px;
     transition: all 0.2s ease;
-    cursor: text; /* Indica que es clickeable */
+    cursor: text;
     min-height: 50px;
 }
 
@@ -405,7 +405,7 @@ body {
     font-size: 1.5rem;
     white-space: nowrap;
     line-height: 1.4;
-    padding-top: 4px; /* Manual alignment sync */
+    padding-top: 2px; /* Alineación con el primer renglón del textarea */
     margin: 0;
 }
 
@@ -421,12 +421,11 @@ body {
     resize: none;
     overflow: hidden;
     line-height: 1.4;
-    padding: 0;
+    padding: 2px 0 0 0; /* Un poco de padding arriba para alinear con label */
     margin: 0;
     word-break: break-word;
     white-space: pre-wrap;
-    height: 26px;
-    min-height: 26px;
+    min-height: 26px; /* Altura mínima de un renglón */
 }
 
 .pill-textarea-style {
@@ -783,55 +782,124 @@ body {
 
     /* Ajustes de layout general para vista vertical */
     body {
-        padding: 80px 10px 30px;
+        padding: 70px 10px 30px; /* Reducción de margen para dar más espacio */
+    }
+
+    .journal-page {
+        padding: 30px 15px; /* Menos padding lateral para que quepa más contenido */
+        border-radius: 20px;
+        width: 100%;
+        max-width: 100%;
     }
 
     .main-content {
         grid-template-columns: 1fr;
-        gap: 40px;
+        gap: 25px;
     }
 
-    .content-left,
-    .content-right {
+    .main-title {
+        font-size: 2.8rem;
+        word-break: break-all; /* Evita que títulos largos rompan el ancho */
+    }
+
+    .quote-container {
         width: 100%;
+        max-width: 100%;
+    }
+
+    .quote-box {
+        height: auto;
+        min-height: 120px;
+        padding: 10px;
     }
 
     .photo-box {
-        margin: 10px auto 25px auto;
+        width: 100%;
+        max-width: 100%; /* Permite que se encoja */
+        height: auto;
+        aspect-ratio: 2/3; /* Mantiene proporción sin altura fija */
+        margin: 0 auto 20px auto;
     }
 
     .about-section .pill-inputs {
         width: 100%;
         max-width: 100%;
+        padding-inline: 0;
+    }
+
+    .pill-input {
+        padding: 0 12px;
+        gap: 8px;
+        min-height: 45px;
+        width: 100%;
+    }
+
+    .pill-input label,
+    .pill-input input,
+    .pill-input textarea {
+        font-size: 1.2rem;
+    }
+
+    /* ESTRELLAS: Factor crítico de desbordamiento */
+    .star-rating {
+        gap: 5px;
+    }
+
+    .star-cell {
+        width: 45px; /* Reducido de 60px para que 5 quepan en ~250px */
+        height: 45px;
+    }
+
+    .star-svg {
+        width: 45px;
+        height: 45px;
     }
 
     .review-box {
         height: auto;
-        min-height: 350px;
+        min-height: 300px;
+        border-radius: 20px;
+        width: 100%;
     }
 
     .review-box textarea {
-        font-size: 1.4rem;
-        line-height: 32px;
-        background-position: 0 20px;
-        background-size: 100% 32px;
-        padding: 20px;
+        font-size: 1.3rem; /* Ligeramente más pequeño */
+        line-height: 30px;
+        background-position: 0 18px;
+        background-size: 100% 30px;
+        padding: 15px;
     }
 
     .music-section {
         margin-top: 10px;
+        padding: 12px;
+        width: 100%;
     }
 
-    /* Botones de acción uno debajo del otro */
+    .music-input-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    #music-link {
+        width: 100%;
+    }
+
+    /* Botones de acción */
     .action-footer {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.75rem;
+        gap: 0.8rem;
+        padding: 0 10px;
+        margin-top: 20px;
+        width: 100%;
     }
 
     .share-btn {
         width: 100%;
         justify-content: center;
+        font-size: 1.1rem;
+        padding: 10px 15px;
     }
 
     /* Navbar colapsable */
