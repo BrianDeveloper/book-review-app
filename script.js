@@ -227,6 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackTitle = document.getElementById('feedback-title');
 
     const feedbackMessage = document.getElementById('feedback-message');
+    const themeToggle = document.getElementById('theme-toggle');
+    const profileBtn = document.getElementById('profile-btn');
+    const profileModal = document.getElementById('profile-modal');
+    const profileForm = document.getElementById('profile-form');
+    const closeProfileModal = document.getElementById('close-profile-modal');
 
 
 
@@ -1127,6 +1132,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const username = user.user_metadata?.username || user.email?.split('@')[0] || 'Usuario';
 
             userDisplay.textContent = `¡Hola, ${username}! 📖`;
+
+            // Cargar perfil extendido
+            loadProfile(user);
 
         }
 
@@ -2577,7 +2585,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    ['title', 'author', 'fav-quote', 'auth-username', 'review-text', 'fav-character'].forEach(id => {
+    ['title', 'author', 'fav-quote', 'auth-username', 'review-text', 'fav-character', 'profile-bio'].forEach(id => {
 
         const ta = document.getElementById(id);
 
@@ -2585,5 +2593,142 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
+    // --- Theme Logic ---
+
+    const initTheme = () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            const toggle = document.getElementById('theme-toggle');
+            if (toggle) toggle.textContent = '☀️';
+        }
+    };
+
+    initTheme();
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            showToast(`Modo ${isDark ? 'oscuro' : 'claro'} activado`, 'info', 1500);
+        });
+    }
+
+    // --- Profile Logic ---
+    
+    const loadProfile = async (user) => {
+        if (!user) return;
+        const sb = getSupabase();
+        if (!sb) return;
+
+        try {
+            const { data, error } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') throw error;
+
+            if (data) {
+                if (document.getElementById('profile-username')) document.getElementById('profile-username').value = data.username || '';
+                if (document.getElementById('profile-avatar-url')) document.getElementById('profile-avatar-url').value = data.avatar_url || '';
+                if (document.getElementById('profile-bio')) {
+                    const bioField = document.getElementById('profile-bio');
+                    bioField.value = data.bio || '';
+                    resize(bioField); // Ajustar altura después de cargar
+                }
+                
+                updateProfileUI(data);
+            } else {
+                const defaultUsername = user.user_metadata?.username || user.email?.split('@')[0] || 'Lector';
+                if (document.getElementById('profile-username')) document.getElementById('profile-username').value = defaultUsername;
+                const usernameDisplay = document.getElementById('profile-username-display');
+                if (usernameDisplay) usernameDisplay.textContent = defaultUsername;
+            }
+            
+            const emailDisplay = document.getElementById('profile-email-display');
+            if (emailDisplay) emailDisplay.textContent = user.email || '';
+
+        } catch (e) {
+            console.error('Error al cargar perfil:', e);
+        }
+    };
+    
+    const updateProfileUI = (profile) => {
+        const userDisplay = document.getElementById('user-display');
+        const navAvatar = document.getElementById('current-avatar');
+        const usernameDisplay = document.getElementById('profile-username-display');
+
+        if (profile.username) {
+            if (userDisplay) userDisplay.textContent = `¡Hola, ${profile.username}! 📖`;
+            if (usernameDisplay) usernameDisplay.textContent = profile.username;
+        }
+        
+        if (profile.avatar_url && navAvatar) {
+            navAvatar.src = profile.avatar_url;
+        }
+    };
+
+    if (profileBtn) {
+        profileBtn.addEventListener('click', () => {
+            if (currentUser) {
+                loadProfile(currentUser);
+                showModal(profileModal);
+            }
+        });
+    }
+
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            
+            const sb = getSupabase();
+            const usernameInput = document.getElementById('profile-username');
+            const avatarUrlInput = document.getElementById('profile-avatar-url');
+            const bioInput = document.getElementById('profile-bio');
+            
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            const avatar_url = avatarUrlInput ? avatarUrlInput.value.trim() : '';
+            const bio = bioInput ? bioInput.value.trim() : '';
+
+            const saveBtn = document.getElementById('save-profile-btn');
+            const origText = saveBtn.textContent;
+            saveBtn.textContent = 'GUARDANDO...';
+            saveBtn.disabled = true;
+
+            try {
+                const { error } = await sb.from('profiles').upsert({
+                    id: currentUser.id,
+                    username,
+                    avatar_url,
+                    bio,
+                    updated_at: new Date().toISOString()
+                });
+
+                if (error) throw error;
+                
+                updateProfileUI({ username, avatar_url });
+                showToast('Perfil actualizado con éxito ✨', 'success');
+                if (profileModal) hideModal(profileModal);
+                
+            } catch (err) {
+                showToast('Error al guardar perfil: ' + err.message, 'error');
+            } finally {
+                saveBtn.textContent = origText;
+                saveBtn.disabled = false;
+            }
+        });
+    }
+
+    if (closeProfileModal) {
+        closeProfileModal.addEventListener('click', () => {
+            if (profileModal) hideModal(profileModal);
+        });
+    }
+
+    checkSession();
 });
 

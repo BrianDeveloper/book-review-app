@@ -21,16 +21,20 @@
                         ☰
                     </button>
                 </div>
-            <div class="user-auth-section">
-                <div id="auth-guest" class="auth-group">
-                    <button id="login-btn" class="mini-btn">Iniciar Sesión 🔑</button>
-                    <button id="register-btn" class="mini-btn">Registrarse ✨</button>
-                </div>
-                <div id="auth-user" class="auth-group" style="display: none;">
-                    <span id="user-display" class="user-name-label">¡Hola, Lector! 📖</span>
-                    <button id="new-entry-btn" class="mini-btn">Nueva Entrada ✨</button>
-                    <button id="my-reviews-btn" class="mini-btn">Mis Libros 📚</button>
-                    <button id="logout-btn" class="mini-btn">Salir 🚪</button>
+            <div class="nav-right">
+                <button id="theme-toggle" class="nav-icon-btn" title="Cambiar tema">🌙</button>
+                <div class="user-auth-section">
+                    <div id="auth-guest" class="auth-group">
+                        <button id="login-btn" class="mini-btn">Iniciar Sesión 🔑</button>
+                        <button id="register-btn" class="mini-btn">Registrarse ✨</button>
+                    </div>
+                    <div id="auth-user" class="auth-group" style="display: none;">
+                        <button id="profile-btn" class="nav-icon-btn" title="Mi Perfil">👤</button>
+                        <span id="user-display" class="user-name-label">¡Hola, Lector! 📖</span>
+                        <button id="new-entry-btn" class="mini-btn">Nueva Entrada ✨</button>
+                        <button id="my-reviews-btn" class="mini-btn">Mis Libros 📚</button>
+                        <button id="logout-btn" class="mini-btn">Salir 🚪</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -230,6 +234,38 @@
             <div id="reviews-list" class="reviews-grid">
                 <p class="no-player">Cargando tus libros...</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de Perfil de Usuario -->
+    <div id="profile-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 500px;">
+            <span class="close-modal" id="close-profile-modal">&times;</span>
+            <h2 class="sub-title">Mi Perfil</h2>
+            <div class="profile-header">
+                <div class="profile-avatar-container" id="profile-avatar-display">
+                    <img id="current-avatar" src="https://via.placeholder.com/100" alt="Avatar">
+                </div>
+                <div class="profile-info-summary">
+                    <h3 id="profile-username-display">Usuario</h3>
+                    <p id="profile-email-display">usuario@ejemplo.com</p>
+                </div>
+            </div>
+            <form id="profile-form" class="pill-inputs auth-form-wide">
+                <div class="pill-input">
+                    <label for="profile-username">Nombre:</label>
+                    <input type="text" id="profile-username" placeholder="Tu nombre público">
+                </div>
+                <div class="pill-input">
+                    <label for="profile-avatar-url">URL Avatar:</label>
+                    <input type="text" id="profile-avatar-url" placeholder="https://enlace-a-tu-imagen.jpg">
+                </div>
+                <div class="pill-input">
+                    <label for="profile-bio">Biografía:</label>
+                    <textarea id="profile-bio" rows="2" placeholder="Cuéntanos algo sobre ti..."></textarea>
+                </div>
+                <button type="submit" id="save-profile-btn" class="journal-btn">GUARDAR CAMBIOS ✨</button>
+            </form>
         </div>
     </div>
 
