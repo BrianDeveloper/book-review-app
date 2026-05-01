@@ -241,11 +241,30 @@ async function processPrize(prize, wasFree) {
         message = "Esta vez no hubo suerte... 💨 ¡Inténtalo de nuevo!";
     }
 
-    state.set({ userPreferences: prefs, casinoTokens: prefs.casino_tokens || 0, userCoins: updates.coins || state.getKey('userCoins') });
+    state.set({ userPreferences: prefs, casinoTokens: prefs.casino_tokens || 0 });
 
     try {
-        const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
-        if (error) throw error;
+        try {
+            // Actualizamos monedas vía RPC seguro
+            const { data: stats, error: statsError } = await sb.rpc('secure_increment_stats', {
+                p_coins_delta: delta,
+                p_xp_delta: xpDelta
+            });
+            if (statsError) throw statsError;
+
+            // Actualizamos preferencias (tokens diarios, etc) que no están bloqueados por el trigger
+            const { error: prefError } = await sb.from('profiles').update({ preferences: prefs }).eq('id', currentUser.id);
+            if (prefError) throw prefError;
+
+            if (stats) {
+                state.set({ userCoins: stats.coins });
+                if (window.updateCurrencyUI) window.updateCurrencyUI();
+            }
+        } catch (err) {
+            console.error('Error seguro en casino:', err);
+            showToast('Error al sincronizar resultados con el servidor.', 'error');
+        }
+        
         showToast(message, prize.type === 'nothing' ? 'info' : 'success');
         if (typeof window.updateProfileUI === 'function') {
             const current = state.get();

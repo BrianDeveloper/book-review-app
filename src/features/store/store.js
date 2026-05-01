@@ -176,23 +176,28 @@ export async function buyItem(itemId) {
     if (!sb) return;
 
     try {
-        const newCoins = userCoins - item.price;
-        const newItems = [...unlockedItems, { id: item.id, type: item.type }];
-
-        const { error } = await sb.from('profiles').update({
-            coins: newCoins,
-            unlocked_items: newItems
-        }).eq('id', currentUser.id);
+        const { data, error } = await sb.rpc('secure_increment_stats', {
+            p_coins_delta: -item.price,
+            p_xp_delta: 0
+        });
 
         if (error) throw error;
 
-        // Publicar cambios reactivos
-        State.set({ coins: newCoins, unlockedItems: newItems, userCoins: newCoins });
-        showToast(`¡${item.name} desbloqueado! 🎉`, 'success');
+        const { error: itemError } = await sb.from('profiles')
+            .update({ unlocked_items: [...unlocked, item.id] })
+            .eq('id', currentUser.id);
+        
+        if (itemError) throw itemError;
 
+        if (data) {
+            State.set({ userCoins: data.coins, unlockedItems: [...unlocked, item.id] });
+            if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
+            if (typeof window.updateProfileUI === 'function') window.updateProfileUI();
+        }
+        window.showToast(`¡Has comprado ${item.name}! 🛍️`, 'success');
     } catch (e) {
-        console.error('❌ Error comprando artículo:', e);
-        showToast('Error al procesar la compra.', 'error');
+        console.error('Error en compra segura:', e);
+        window.showToast('Error al procesar la compra.', 'error');
     }
 }
 
@@ -208,12 +213,25 @@ export const equipItem = async (itemId, type) => {
     else if (type === 'skin') updateData.selected_skin = itemId;
 
     try {
-        const { error } = await sb.from('profiles').update(updateData).eq('id', currentUser.id);
-        if (error) throw error;
+        try {
+            const { data: result, error } = await sb.rpc('secure_increment_stats', {
+                p_coins_delta: 0,
+                p_xp_delta: 0
+            });
 
-        showToast('¡Personalización aplicada! ✨', 'success');
+            if (error) throw error;
 
-        // Refrescar el Store en Memoria y Aplicar Visualmente
+            await sb.from('profiles').update(updateData).eq('id', currentUser.id);
+
+            if (result) {
+                State.set({ userCoins: result.coins });
+                if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
+            }
+        } catch (e) {
+            console.error('Error seguro en equipamiento:', e);
+            window.showToast('Error al sincronizar resultados.', 'error');
+        } 
+        
         State.set({
             selectedFrame: type === 'frame' ? itemId : State.getKey('selectedFrame'),
             selectedTitle: type === 'title' ? itemId : State.getKey('selectedTitle'),
