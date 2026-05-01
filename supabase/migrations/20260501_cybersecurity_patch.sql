@@ -83,7 +83,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 6. Update existing Trivia RPC to bypass the shield
+-- 6. Update Trivia RPC with bypass
 CREATE OR REPLACE FUNCTION public.submit_trivia_answer(
     p_question_id UUID,
     p_selected_index INT,
@@ -99,46 +99,78 @@ DECLARE
     v_profile_exists BOOLEAN;
     v_limit_check_start TIMESTAMPTZ;
 BEGIN
-    -- ACTIVATE INTERNAL KEY
     PERFORM set_config('my.internal_call', 'true', true);
-
     v_user_id := auth.uid();
-    IF v_user_id IS NULL THEN RETURN json_build_object('success', false, 'message', 'Error: Usuario no autenticado'); END IF;
-
+    IF v_user_id IS NULL THEN RETURN json_build_object('success', false, 'message', 'Not authenticated'); END IF;
     SELECT EXISTS(SELECT 1 FROM public.profiles WHERE id = v_user_id) INTO v_profile_exists;
-    IF NOT v_profile_exists THEN RETURN json_build_object('success', false, 'message', 'Error: Perfil no encontrado'); END IF;
-
+    IF NOT v_profile_exists THEN RETURN json_build_object('success', false, 'message', 'Profile not found'); END IF;
     IF p_start_of_day IS NOT NULL THEN v_limit_check_start := p_start_of_day;
     ELSE v_limit_check_start := now() - interval '20 hours'; END IF;
-
     SELECT count(*) INTO v_answered_today FROM public.user_trivia_responses WHERE user_id = v_user_id AND answered_at >= v_limit_check_start;
-    IF v_answered_today >= 3 THEN RETURN json_build_object('success', false, 'message', 'Límite diario alcanzado (3 preguntas por día)'); END IF;
-
+    IF v_answered_today >= 3 THEN RETURN json_build_object('success', false, 'message', 'Límite alcanzado'); END IF;
     SELECT correct_index, reward INTO v_correct_index, v_reward FROM public.trivia_questions WHERE id = p_question_id;
-    IF NOT FOUND THEN RETURN json_build_object('success', false, 'message', 'Error: Pregunta no encontrada'); END IF;
-
     v_is_correct := (COALESCE(p_selected_index, -1) = v_correct_index);
-
-    INSERT INTO public.user_trivia_responses (user_id, question_id, selected_index, is_correct)
-    VALUES (v_user_id, p_question_id, p_selected_index, v_is_correct);
-
+    INSERT INTO public.user_trivia_responses (user_id, question_id, selected_index, is_correct) VALUES (v_user_id, p_question_id, p_selected_index, v_is_correct);
     IF v_is_correct THEN
         UPDATE public.profiles SET coins = coins + v_reward WHERE id = v_user_id;
-        RETURN json_build_object(
-            'success', true, 
-            'is_correct', true, 
-            'reward_added', v_reward,
-            'new_total_coins', (SELECT coins FROM public.profiles WHERE id = v_user_id)
-        );
+        RETURN json_build_object('success', true, 'is_correct', true, 'reward_added', v_reward, 'new_total_coins', (SELECT coins FROM public.profiles WHERE id = v_user_id));
     ELSE
-        RETURN json_build_object(
-            'success', true, 
-            'is_correct', false, 
-            'correct_answer_index', v_correct_index, 
-            'reward_added', 0
-        );
+        RETURN json_build_object('success', true, 'is_correct', false, 'correct_answer_index', v_correct_index, 'reward_added', 0);
     END IF;
-EXCEPTION WHEN OTHERS THEN
-    RETURN json_build_object('success', false, 'message', 'Database Error: ' || SQLERRM);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 7. Update Memory Game RPC with bypass
+CREATE OR REPLACE FUNCTION public.record_game_session(
+    p_game_type TEXT, 
+    p_score INTEGER, 
+    p_reward INTEGER,
+    p_start_of_day TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+    v_user_id UUID;
+    v_daily_count INTEGER;
+    v_check_start TIMESTAMPTZ;
+BEGIN
+    PERFORM set_config('my.internal_call', 'true', true);
+    v_user_id := auth.uid();
+    IF v_user_id IS NULL THEN RETURN json_build_object('success', false, 'message', 'Not authenticated'); END IF;
+    IF p_start_of_day IS NOT NULL THEN v_check_start := p_start_of_day;
+    ELSE v_check_start := CURRENT_DATE AT TIME ZONE 'UTC'; END IF;
+    SELECT COUNT(*) INTO v_daily_count FROM public.game_logs WHERE user_id = v_user_id AND created_at >= v_check_start;
+    IF v_daily_count >= 5 THEN RETURN json_build_object('success', false, 'message', 'Limit reached'); END IF;
+    INSERT INTO public.game_logs (user_id, game_type, score, coins_awarded) VALUES (v_user_id, p_game_type, p_score, p_reward);
+    UPDATE public.profiles SET coins = coins + p_reward WHERE id = v_user_id;
+    RETURN json_build_object('success', true, 'reward', p_reward, 'new_total_coins', (SELECT coins FROM public.profiles WHERE id = v_user_id));
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8. Update Missions/Likes RPC with bypass
+CREATE OR REPLACE FUNCTION public.increment_user_stats(p_user_id UUID, p_add_coins INTEGER, p_add_xp INTEGER)
+RETURNS VOID AS $$
+BEGIN
+    PERFORM set_config('my.internal_call', 'true', true);
+    UPDATE public.profiles 
+    SET coins = coins + p_add_coins, xp = xp + p_add_xp
+    WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 9. New Secure Store Purchase RPC
+CREATE OR REPLACE FUNCTION public.secure_buy_item(p_item_id TEXT, p_price INTEGER)
+RETURNS JSONB AS $$
+DECLARE
+    v_user_id UUID := auth.uid();
+    v_current_coins INTEGER;
+BEGIN
+    PERFORM set_config('my.internal_call', 'true', true);
+    SELECT coins INTO v_current_coins FROM public.profiles WHERE id = v_user_id;
+    IF v_current_coins < p_price THEN RAISE EXCEPTION 'Insufficient coins'; END IF;
+    UPDATE public.profiles 
+    SET coins = coins - p_price,
+        unlocked_items = unlocked_items || jsonb_build_array(p_item_id)
+    WHERE id = v_user_id;
+    RETURN jsonb_build_object('success', true, 'new_coins', (SELECT coins FROM public.profiles WHERE id = v_user_id));
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

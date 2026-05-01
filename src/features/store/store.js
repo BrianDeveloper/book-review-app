@@ -176,28 +176,28 @@ export async function buyItem(itemId) {
     if (!sb) return;
 
     try {
-        const { data, error } = await sb.rpc('secure_increment_stats', {
-            p_coins_delta: -item.price,
-            p_xp_delta: 0
+        const { data, error } = await sb.rpc('secure_buy_item', {
+            p_item_id: item.id,
+            p_price: item.price
         });
 
         if (error) throw error;
 
-        const { error: itemError } = await sb.from('profiles')
-            .update({ unlocked_items: [...unlocked, item.id] })
-            .eq('id', currentUser.id);
-        
-        if (itemError) throw itemError;
-
-        if (data) {
-            State.set({ userCoins: data.coins, unlockedItems: [...unlocked, item.id] });
+        if (data && data.success) {
+            const currentUnlocked = State.getKey('unlockedItems') || [];
+            State.set({ 
+                userCoins: data.new_coins, 
+                unlockedItems: [...currentUnlocked, item.id] 
+            });
+            
             if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
             if (typeof window.updateProfileUI === 'function') window.updateProfileUI();
+            
+            window.showToast(`¡Has comprado ${item.name}! 🛍️`, 'success');
         }
-        window.showToast(`¡Has comprado ${item.name}! 🛍️`, 'success');
     } catch (e) {
         console.error('Error en compra segura:', e);
-        window.showToast('Error al procesar la compra.', 'error');
+        window.showToast(e.message || 'Error al procesar la compra.', 'error');
     }
 }
 

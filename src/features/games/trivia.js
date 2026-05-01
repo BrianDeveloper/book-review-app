@@ -71,28 +71,32 @@ export const triviaGame = {
         }
 
         try {
+            const { data: stats, error: statsError } = await sb.rpc('secure_increment_stats', {
+                p_coins_delta: -price,
+                p_xp_delta: 0
+            });
+
+            if (statsError) throw statsError;
+
+            // Actualizar comodines en DB (no bloqueados por el trigger si es un update parcial)
             const newJokers = { ...this.gameState.jokers };
             newJokers[type] = (newJokers[type] || 0) + 1;
-
-            const { error } = await sb
-                .from('profiles')
-                .update({ 
-                    coins: currentCoins - price,
-                    jokers: newJokers 
-                })
-                .eq('id', user.id);
-
-            if (error) throw error;
-
-            // Actualizar estado local y UI
-            State.set({ userCoins: currentCoins - price });
-            if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
             
-            this.gameState.jokers = newJokers;
-            this.syncInventory();
-            window.showToast('¡Compra realizada! 🛒', 'success');
+            const { error: jokerError } = await sb.from('profiles').update({ jokers: newJokers }).eq('id', user.id);
+            if (jokerError) throw jokerError;
 
+            if (stats) {
+                State.set({ userCoins: stats.coins });
+                if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
+                
+                this.gameState.jokers = newJokers;
+                this.syncInventory();
+                window.showToast('¡Compra realizada! 🛒', 'success');
+            }
         } catch (e) {
+            console.error('Error en compra segura de comodín:', e);
+            window.showToast('Error al procesar la compra.', 'error');
+        }
             console.error('Error en compra:', e);
             window.showToast('Error al procesar la compra.', 'error');
         }
