@@ -188,7 +188,13 @@ export async function buyItem(itemId) {
 
         State.set({ userCoins: newCoins, unlockedItems: newItems });
         if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
-        if (typeof window.updateProfileUI === 'function') window.updateProfileUI();
+        if (typeof window.updateProfileUI === 'function') {
+            const current = State.get();
+            window.updateProfileUI({
+                username: current.currentUsername,
+                avatar_url: current.currentAvatar
+            });
+        }
         showToast(`¡${item.name} desbloqueado! 🎉`, 'success');
 
     } catch (e) {
