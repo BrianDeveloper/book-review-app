@@ -1,5 +1,6 @@
 import { getSupabase } from '../../core/api.js';
 import State from '../../core/State.js';
+import { showToast, showConfirm, showModal, hideModal } from '../../utils.js';
 
 /**
  * Módulo de Trivia Literaria: Estilo "Quién quiere ser Millonario"
@@ -60,45 +61,38 @@ export const triviaGame = {
         const sb = getSupabase();
         const user = State.get().currentUser;
         if (!sb || !user) {
-            window.showToast('Inicia sesión para comprar comodines 🛍️', 'info');
+            showToast('Inicia sesión para comprar comodines 🛍️', 'info');
             return;
         }
 
         const currentCoins = State.get().userCoins || 0;
         if (currentCoins < price) {
-            window.showToast('No tienes suficientes monedas 💰', 'error');
+            showToast('No tienes suficientes monedas 💰', 'error');
             return;
         }
 
         try {
-            const { data: stats, error: statsError } = await sb.rpc('secure_increment_stats', {
-                p_coins_delta: -price,
-                p_xp_delta: 0
-            });
-
-            if (statsError) throw statsError;
-
-            // Actualizar comodines en DB (no bloqueados por el trigger si es un update parcial)
+            const newCoins = currentCoins - price;
             const newJokers = { ...this.gameState.jokers };
             newJokers[type] = (newJokers[type] || 0) + 1;
-            
-            const { error: jokerError } = await sb.from('profiles').update({ jokers: newJokers }).eq('id', user.id);
-            if (jokerError) throw jokerError;
 
-            if (stats) {
-                State.set({ userCoins: stats.coins });
-                if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
-                
-                this.gameState.jokers = newJokers;
-                this.syncInventory();
-                window.showToast('¡Compra realizada! 🛒', 'success');
-            }
+            const { error } = await sb.from('profiles').update({
+                coins: newCoins,
+                jokers: newJokers
+            }).eq('id', user.id);
+
+            if (error) throw error;
+
+            State.set({ userCoins: newCoins });
+            if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
+            
+            this.gameState.jokers = newJokers;
+            this.syncInventory();
+            showToast('¡Compra realizada! 🛒', 'success');
+
         } catch (e) {
-            console.error('Error en compra segura de comodín:', e);
-            window.showToast('Error al procesar la compra.', 'error');
-        }
-            console.error('Error en compra:', e);
-            window.showToast('Error al procesar la compra.', 'error');
+            console.error('Error en compra de comodín:', e);
+            showToast('Error al procesar la compra.', 'error');
         }
     },
 
@@ -337,7 +331,7 @@ export const triviaGame = {
                 await sb.from('profiles').update({ coins: newCoins }).eq('id', user.id);
                 
                 setTimeout(() => {
-                    window.showConfirm('¡Respuesta Correcta! 🎉', `Has ganado ${reward}💰. ¡Siguiente nivel!`, () => {
+                    showConfirm('¡Respuesta Correcta! 🎉', `Has ganado ${reward}💰. ¡Siguiente nivel!`, () => {
                         this.gameState.answeredToday++;
                         this.loadQuestion();
                     });
@@ -353,11 +347,11 @@ export const triviaGame = {
                 setTimeout(() => {
                     if (this.gameState.answeredToday < 3) {
                         const triesLeft = 3 - this.gameState.answeredToday;
-                        window.showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][correctIdx]}. Te quedan ${triesLeft} intento(s) para hoy. ¿Quieres continuar?`, () => {
+                        showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][correctIdx]}. Te quedan ${triesLeft} intento(s) para hoy. ¿Quieres continuar?`, () => {
                             this.loadQuestion();
                         });
                     } else {
-                        window.showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][correctIdx]}. Has agotado tus intentos de hoy.`, () => {
+                        showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][correctIdx]}. Has agotado tus intentos de hoy.`, () => {
                             this.showLimitMessage();
                         });
                     }
@@ -365,7 +359,7 @@ export const triviaGame = {
             }
         } catch (e) {
             console.error('Error al validar respuesta:', e);
-            window.showToast('Error al conectar con el servidor.', 'error');
+            showToast('Error al conectar con el servidor.', 'error');
         }
     },
 
