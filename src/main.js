@@ -4,6 +4,7 @@ import * as auth from './features/auth/auth.js';
 import { initAuthUI } from './features/auth/auth_ui.js';
 import * as store from './features/store/store.js';
 import { memoryGame } from './features/games/memory.js';
+import '../script.js'; // Unificar legacy en el bundle principal
 
 // --- CORE INFRASTRUCTURE ---
 import EventBus from './core/EventBus.js';
