@@ -24,7 +24,7 @@ const getGlobalState = () => window.AppState;
 
 export function initCasino() {
     console.log("🎲 Inicializando Casino...");
-    
+
     EventBus.subscribe('STATE_CASINOTOKENS_CHANGED', updateCasinoUI);
     EventBus.subscribe('STATE_USERCOINS_CHANGED', updateCasinoUI);
 
@@ -53,7 +53,7 @@ export function initCasino() {
             const price = parseInt(e.target.closest('.offer-card').dataset.price);
             buyTokens(qty, price);
         }
-        
+
         if (e.target.id === 'spin-wheel-btn') {
             handleSpinClick();
         }
@@ -80,7 +80,7 @@ function renderWheel() {
         const color = i % 2 === 0 ? '#4a362b' : '#f9f3e5';
         return `${color} ${i * segmentAngle}deg ${(i + 1) * segmentAngle}deg`;
     }).join(', ');
-    
+
     wheel.style.background = `conic-gradient(${gradientColors})`;
     wheel.style.borderRadius = '50%';
 
@@ -132,7 +132,7 @@ export function updateCasinoUI() {
         const prefs = state.getKey('userPreferences') || {};
         const lastSpinDate = prefs.last_spin_date;
         const today = new Date().toISOString().split('T')[0];
-        
+
         if (lastSpinDate !== today) {
             hint.innerHTML = '<span class="free-badge">✨ GIRO GRATIS DISPONIBLE ✨</span><br>Tu primer giro de hoy no cuesta fichas.';
             hint.classList.add('is-free');
@@ -244,27 +244,14 @@ async function processPrize(prize, wasFree) {
     state.set({ userPreferences: prefs, casinoTokens: prefs.casino_tokens || 0 });
 
     try {
-        try {
-            // Actualizamos monedas vía RPC seguro
-            const { data: stats, error: statsError } = await sb.rpc('secure_increment_stats', {
-                p_coins_delta: delta,
-                p_xp_delta: xpDelta
-            });
-            if (statsError) throw statsError;
+        const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
+        if (error) throw error;
 
-            // Actualizamos preferencias (tokens diarios, etc) que no están bloqueados por el trigger
-            const { error: prefError } = await sb.from('profiles').update({ preferences: prefs }).eq('id', currentUser.id);
-            if (prefError) throw prefError;
-
-            if (stats) {
-                state.set({ userCoins: stats.coins });
-                if (window.updateCurrencyUI) window.updateCurrencyUI();
-            }
-        } catch (err) {
-            console.error('Error seguro en casino:', err);
-            showToast('Error al sincronizar resultados con el servidor.', 'error');
+        if (updates.coins) {
+            state.set({ userCoins: updates.coins });
+            if (window.updateCurrencyUI) window.updateCurrencyUI();
         }
-        
+
         showToast(message, prize.type === 'nothing' ? 'info' : 'success');
         if (typeof window.updateProfileUI === 'function') {
             const current = state.get();

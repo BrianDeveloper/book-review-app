@@ -111,31 +111,24 @@ export const awardXP = async (amount) => {
     const sb = getSupabase();
     if (!sb) return;
 
+    userXP += amount;
+
+    // Calcular nivel localmente
+    while (userXP >= Math.floor(100 * Math.pow(userLevel, 1.5))) {
+        userLevel++;
+        showToast(`🎊 ¡NIVEL ${userLevel}! ¡Felicidades, sigues creciendo como lector!`, 'success', 3500);
+    }
+
+    if (window.AppState) {
+        window.AppState.set({ userXP, userLevel });
+    }
+    updateLevelUI();
+
     try {
-        const { data, error } = await sb.rpc('secure_increment_stats', {
-            p_coins_delta: 0,
-            p_xp_delta: amount
-        });
-
-        if (error) throw error;
-
-        // Actualizar estado local con la respuesta oficial del servidor
-        if (data) {
-            userXP = data.xp;
-            if (data.level > userLevel) {
-                userLevel = data.level;
-                showToast(`🎊 ¡NIVEL ${userLevel}! ¡Felicidades, sigues creciendo como lector!`, 'success', 3500);
-            }
-            
-            if (window.AppState) {
-                window.AppState.set({ userXP, userLevel });
-            }
-            updateLevelUI();
-        }
-
+        await sb.from('profiles').update({ xp: userXP, level: userLevel }).eq('id', currentUser.id);
         if (typeof window.checkAchievements === 'function') window.checkAchievements(currentUser.id);
     } catch (err) {
-        console.error('💥 Error securizado al guardar XP:', err);
+        console.error('💥 Error guardando XP:', err);
     }
 };
 
@@ -325,22 +318,16 @@ export const addCoins = async (amount) => {
     if (!currentUser) return;
     const sb = getSupabase(); if (!sb) return;
     try {
-        const { data, error } = await sb.rpc('secure_increment_stats', {
-            p_coins_delta: amount,
-            p_xp_delta: 0
-        });
-
+        const newBalance = userCoins + amount;
+        const { error } = await sb.from('profiles').update({ coins: newBalance }).eq('id', currentUser.id);
         if (error) throw error;
-        
-        if (data) {
-            userCoins = data.coins;
-            if (window.AppState) window.AppState.set({ userCoins });
-            updateCurrencyUI();
-            showToast(`¡Has ganado ${amount} monedas! 💰`, 'success');
-        }
+        userCoins = newBalance;
+        if (window.AppState) window.AppState.set({ userCoins });
+        updateCurrencyUI();
+        showToast(`¡Has ganado ${amount} monedas! 💰`, 'success');
         return true;
     } catch (e) {
-        console.error('Error seguro al añadir monedas:', e);
+        console.error('Error al añadir monedas:', e);
         return false;
     }
 };
@@ -353,22 +340,16 @@ export const spendCoins = async (amount) => {
     }
     const sb = getSupabase(); if (!sb) return;
     try {
-        const { data, error } = await sb.rpc('secure_increment_stats', {
-            p_coins_delta: -amount,
-            p_xp_delta: 0
-        });
-
+        const newBalance = userCoins - amount;
+        const { error } = await sb.from('profiles').update({ coins: newBalance }).eq('id', currentUser.id);
         if (error) throw error;
-
-        if (data) {
-            userCoins = data.coins;
-            if (window.AppState) window.AppState.set({ userCoins });
-            updateCurrencyUI();
-            showToast(`Has gastado ${amount} monedas 💸`, 'info');
-        }
+        userCoins = newBalance;
+        if (window.AppState) window.AppState.set({ userCoins });
+        updateCurrencyUI();
+        showToast(`Has gastado ${amount} monedas 💸`, 'info');
         return true;
     } catch (e) {
-        console.error('Error seguro al gastar monedas:', e);
+        console.error('Error al gastar monedas:', e);
         return false;
     }
 };

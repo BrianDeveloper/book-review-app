@@ -309,56 +309,55 @@ export const triviaGame = {
 
     async checkAnswer(idx) {
         const sb = getSupabase();
-        if (!sb) return;
+        const user = State.get().currentUser;
+        if (!sb || !user) return;
 
         const options = document.querySelectorAll('.diamond-option');
         options.forEach(opt => opt.style.pointerEvents = 'none');
 
-        try {
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-            const isoStart = startOfDay.toISOString();
+        const isCorrect = (idx === this.gameState.currentQuestion.correct_index);
+        const reward = isCorrect ? this.gameState.currentQuestion.reward : 0;
 
-            const { data, error } = await sb.rpc('submit_trivia_answer', {
-                p_question_id: this.gameState.currentQuestion.id,
-                p_selected_index: idx,
-                p_start_of_day: isoStart
+        try {
+            // 1. Guardar la respuesta localmente en la base de datos
+            await sb.from('user_trivia_responses').insert({
+                user_id: user.id,
+                question_id: this.gameState.currentQuestion.id,
+                selected_index: idx,
+                is_correct: isCorrect
             });
 
-            if (error) throw error;
-
-            if (!data.success) {
-                window.showToast(data.message || 'Error al procesar respuesta', 'warning');
-                options.forEach(opt => opt.style.pointerEvents = 'auto');
-                return;
-            }
-
-            if (data.is_correct) {
+            if (isCorrect) {
                 options[idx].classList.add('correct');
+                
+                // 2. Dar recompensa directamente
+                const currentCoins = State.get().userCoins || 0;
+                const newCoins = currentCoins + reward;
+                
+                await sb.from('profiles').update({ coins: newCoins }).eq('id', user.id);
+                
                 setTimeout(() => {
-                    window.showConfirm('¡Respuesta Correcta! 🎉', `Has ganado ${data.reward_added}💰. ¡Siguiente nivel!`, () => {
+                    window.showConfirm('¡Respuesta Correcta! 🎉', `Has ganado ${reward}💰. ¡Siguiente nivel!`, () => {
                         this.gameState.answeredToday++;
                         this.loadQuestion();
                     });
-                    if (typeof window.updateCurrencyUI === 'function') {
-                        State.set({ userCoins: (State.get().userCoins || 0) + data.reward_added });
-                        window.updateCurrencyUI();
-                    }
+                    State.set({ userCoins: newCoins });
+                    if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
                 }, 1000);
             } else {
+                const correctIdx = this.gameState.currentQuestion.correct_index;
                 options[idx].classList.add('wrong');
-                options[data.correct_answer_index].classList.add('correct');
+                options[correctIdx].classList.add('correct');
                 
-                this.gameState.answeredToday++; // Incrementar contador de intentos diarios
-
+                this.gameState.answeredToday++;
                 setTimeout(() => {
                     if (this.gameState.answeredToday < 3) {
                         const triesLeft = 3 - this.gameState.answeredToday;
-                        window.showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][data.correct_answer_index]}. Te quedan ${triesLeft} intento(s) para hoy. ¿Quieres continuar?`, () => {
+                        window.showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][correctIdx]}. Te quedan ${triesLeft} intento(s) para hoy. ¿Quieres continuar?`, () => {
                             this.loadQuestion();
                         });
                     } else {
-                        window.showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][data.correct_answer_index]}. Has agotado tus intentos de hoy.`, () => {
+                        window.showConfirm('¡Casi! ❌', `La respuesta correcta era la ${['A','B','C','D'][correctIdx]}. Has agotado tus intentos de hoy.`, () => {
                             this.showLimitMessage();
                         });
                     }
