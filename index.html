@@ -1,26 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clubsito de lectura - Review Zone</title>
     <!-- Favicon inline para evitar 404 en favicon.ico -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%236b4f3f'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' font-size='26' fill='%23f9f3e5' font-family='sans-serif'%3E📖%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="index.css">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%236b4f3f'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' font-size='26' fill='%23f9f3e5' font-family='sans-serif'%3E📖%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components/casino.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Sniglet&family=Averia+Libre:wght@300;400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Sniglet&family=Averia+Libre:wght@300;400;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-content">
-                <div class="nav-left">
-                    <div class="nav-brand">📖 Review Zone</div>
-                    <button id="nav-toggle" class="nav-toggle" aria-label="Mostrar u ocultar menú">
-                        ☰
-                    </button>
-                </div>
+            <div class="nav-left">
+                <div class="nav-brand" id="go-home-btn" style="cursor: pointer;">📖 Review Zone</div>
+                <button id="nav-toggle" class="nav-toggle" aria-label="Mostrar u ocultar menú">
+                    ☰
+                </button>
+            </div>
+
+            <div class="nav-center" id="nav-global-read" style="display: none;" title="Lectura actual de la comunidad">
+                <span class="nav-read-icon">📖</span>
+                <span id="nav-global-read-title" class="nav-read-text">Cargando...</span>
+            </div>
+
             <div class="nav-right">
                 <button id="theme-toggle" class="nav-icon-btn" title="Cambiar tema">🌙</button>
                 <div class="user-auth-section">
@@ -29,190 +41,647 @@
                         <button id="register-btn" class="mini-btn">Registrarse ✨</button>
                     </div>
                     <div id="auth-user" class="auth-group" style="display: none;">
-                        <button id="profile-btn" class="nav-icon-btn" title="Mi Perfil">👤</button>
-                        <span id="user-display" class="user-name-label">¡Hola, Lector! 📖</span>
-                        <button id="new-entry-btn" class="mini-btn">Nueva Entrada ✨</button>
-                        <button id="my-reviews-btn" class="mini-btn">Mis Libros 📚</button>
-                        <button id="logout-btn" class="mini-btn">Salir 🚪</button>
+
+                        <div class="nav-main-links">
+                            <button id="trivia-btn" class="nav-link-btn">Juegos 🎮</button>
+                            <button id="casino-nav-btn" class="nav-link-btn">Casino 🎲</button>
+                            <button id="challenges-btn" class="nav-link-btn">Tienda 🛒</button>
+                            <button id="community-btn" class="nav-link-btn">Comunidad 🌐</button>
+                            <div class="notification-container">
+                                <button id="notifications-btn" class="nav-link-btn" title="Notificaciones">
+                                    🔔
+                                    <span id="global-notifications-badge" class="badge" style="display: none;">0</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="user-dropdown">
+                            <div class="frame-wrapper mini-frame" id="nav-frame">
+                                <button id="profile-btn" class="nav-icon-btn" title="Mi Perfil">👤</button>
+                            </div>
+                            <button id="dropdown-toggle-btn" class="dropdown-trigger-btn"
+                                title="Menú de opciones">▼</button>
+                            <div id="user-dropdown-menu" class="dropdown-menu">
+                                <div class="dropdown-header">
+                                    <span id="user-display" class="user-name-label">¡Hola, Lector! 📖</span>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <button id="new-entry-btn" class="dropdown-item">Nueva Entrada ✨</button>
+                                <button id="my-reviews-btn" class="dropdown-item">Mis Libros 📚</button>
+                                <button id="admin-btn" class="dropdown-item admin-only" style="display: none;">Admin
+                                    🛡️</button>
+                                <div class="dropdown-divider"></div>
+                                <button id="logout-btn" class="dropdown-item logout-item">Salir 🚪</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div id="capture-area">
-        <div class="journal-page">
-            <header class="journal-header">
-                <div class="title-section">
-                    <h1 class="main-title">BOOK</h1>
-                    <h1 class="main-title">REVIEW</h1>
+    <!-- CONTENEDOR PRINCIPAL DE VISTAS (SPA) -->
+    <main id="app-viewport" class="view-viewport">
+        <!-- Dashboard (Inicio) - Se cargará aquí dinámicamente o por defecto -->
+        <div id="dashboard-view" class="view-content active">
+            <div class="dashboard-header"
+                style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 50px; width: 100%;">
+                <h1 class="main-title"
+                    style="margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; overflow-wrap: anywhere; line-height: 1.1;">
+                    <span>BIENVENIDO/A,</span>
+                    <span id="dash-username" style="color: var(--secondary-color);">LECTOR</span>
+                </h1>
+            </div>
+
+            <!-- GUEST CTA (Solo para invitados) -->
+            <div id="dash-guest-cta" class="dashboard-card guest-cta-card" style="display: none;">
+                <div class="cta-banner">
+                    <div class="cta-info">
+                        <h2>¡Desbloquea todo tu potencial lector! 🌟</h2>
+                        <p>Regístrate para guardar tus reseñas, participar en retos comunitarios y coleccionar medallas
+                            únicas.</p>
+                    </div>
+                    <button class="btn highlight-btn"
+                        onclick="const modal=document.getElementById('auth-modal'); if(typeof showModal==='function') showModal(modal);">
+                        Comenzar Ahora
+                    </button>
                 </div>
-                <div class="quote-container">
-                    <div class="quote-box">
-                        <label for="fav-quote">FRASE FAVORITA:</label>
-                        <textarea id="fav-quote" placeholder="&ldquo;Escribe aquí esa frase que te marcó...&rdquo;" required="true"></textarea>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card news-card">
+                    <h3>📢 ¿Qué ofrece nuestra App?</h3>
+                    <ul id="dashboard-news-list" style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 8px;">📖 <strong>Diario Personal:</strong> Reseñas con música, fotos y
+                            estilo.</li>
+                        <li style="margin-bottom: 8px;">🕹️ <strong>Arcade Literario:</strong> Trivia y Memorama con
+                            retos diarios.</li>
+                        <li style="margin-bottom: 8px;">🗨️ <strong>Chat Global:</strong> Conversa con otros lectores en
+                            tiempo real.</li>
+                        <li style="margin-bottom: 8px;">🎨 <strong>Perfil Custom:</strong> Presume tus marcos, avatar y
+                            bio.</li>
+                        <li style="margin-bottom: 8px;">💰 <strong>Economía:</strong> Gana monedas y compra comodines.
+                        </li>
+                        <li style="margin-bottom: 8px;">📊 <strong>Estadísticas:</strong> Sigue tu nivel y progreso
+                            lector.</li>
+                    </ul>
+                </div>
+
+                <div id="dash-quick-actions" class="dashboard-card quick-actions" style="display: none;">
+                    <h3>⚡ Acciones Rápidas</h3>
+                    <div class="action-grid">
+                        <button id="dash-new-review" class="dash-btn">Nueva Reseña ✍️</button>
+                        <button id="dash-stats" class="dash-btn">Estadísticas 📊</button>
+                        <button id="dash-community" class="dash-btn">Comunidad 🌐</button>
+                        <button id="dash-challenges" class="dash-btn">Visitar Tienda 🛒</button>
                     </div>
                 </div>
-            </header>
+            </div>
+        </div>
 
-            <section class="main-content">
-                <div class="content-left">
-                    <div class="photo-box" id="photo-box">
-                        <div class="photo-content" id="photo-preview">
-                            <span class="photo-label">PORTADA</span>
-                            <span class="photo-label">AQUÍ</span>
+        <!-- Dashboard de Perfil (Estadísticas y Métricas) -->
+        <div id="profile-stats-view" class="view-content" style="display: none;">
+            <p class="empty-msg">Cargando tus métricas... 📊</p>
+        </div>
+
+        <div id="community-view" class="view-content" style="display: none;">
+            <div class="community-header">
+                <h2 class="sub-title" style="margin-bottom: 20px;">COMUNIDAD LECTORA 🌐</h2>
+            </div>
+
+            <div class="community-container">
+                <!-- Tabs -->
+                <div class="admin-tabs" style="margin: 15px 0;">
+                    <button class="community-tab-btn active" data-community-tab="tab-global">Global 🌍</button>
+                    <button class="community-tab-btn" data-community-tab="tab-friends">Amigos 👥</button>
+                    <button class="community-tab-btn" data-community-tab="tab-ranking">Ranking 🏆</button>
+                    <button class="community-tab-btn" id="requests-tab-btn"
+                        data-community-tab="tab-requests">Solicitudes 🔔 <span id="requests-badge"
+                            style="display:none; background: var(--secondary-color); color: white; border-radius: 50%; font-size: 0.7rem; padding: 1px 5px; margin-left: 4px;">0</span></button>
+                </div>
+
+                <!-- Tab: Global feed -->
+                <div id="tab-global" class="community-tab-content">
+                    <div id="community-feed" style="margin-top: 0;">
+                        <p class="empty-msg">Cargando la actividad de la comunidad...</p>
+                    </div>
+                </div>
+
+                <!-- Tab: Ranking -->
+                <div id="tab-ranking" class="community-tab-content" style="display: none;">
+                    <div id="ranking-container" class="ranking-list" style="margin-top: 0;">
+                        <p class="empty-msg">Cargando el salón de la fama... 🏆</p>
+                    </div>
+                </div>
+
+                <!-- Tab: Friends feed -->
+                <div id="tab-friends" class="community-tab-content" style="display: none;">
+                    <!-- User search -->
+                    <div class="search-group-container">
+                        <div class="pill-input search-pill">
+                            <input type="text" id="community-user-search" placeholder="Buscar usuario por nombre... 🔍"
+                                class="journal-input">
+                        </div>
+                        <div id="user-search-results"></div>
+                    </div>
+
+
+                    <div id="friend-suggestions-section" style="margin-bottom: 25px; display: none;">
+                        <h3 class="mini-sub-title" style="margin-bottom: 12px; font-size: 1rem; opacity: 0.9;">Lectores
+                            recomendados ✨</h3>
+                        <div id="friend-suggestions-rail" class="suggestions-rail">
+                            <!-- Sugerencias cargadas dinámicamente -->
                         </div>
                     </div>
-                    <button type="button" id="search-cover-btn" class="journal-btn">BUSCAR PORTADA ✨</button>
+
+                    <div id="friends-list-section" style="margin-bottom: 25px;">
+                        <h3 class="mini-sub-title" style="margin-bottom: 15px; font-size: 1.1rem; text-align: center;">
+                            Mis Amigos y Chats 💬</h3>
+                        <div class="friends-grid-wrapper">
+                            <div id="friends-list" class="friends-mini-list">
+                                <!-- Los amigos se cargarán aquí como avatares circulares en grid -->
+                                <p class="empty-msg" style="font-size: 0.9rem;">No tienes amigos aún...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feed-separator">
+                        <div class="line"></div>
+                        <h4 class="feed-subtitle">Actividad de mis Amigos 👥</h4>
+                        <div class="line"></div>
+                    </div>
+
+                    <div id="friends-feed">
+                        <p class="empty-msg">Añade amigos para ver sus lecturas aquí 👋</p>
+                    </div>
+                </div>
+
+                <!-- Tab: Pending Requests -->
+                <div id="tab-requests" class="community-tab-content" style="display: none;">
+                    <div id="pending-requests-list">
+                        <p class="empty-msg">No tienes solicitudes pendientes ✨</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- El Diario de Reseñas -->
+        <div id="journal-view" class="view-content" style="display: none; padding-bottom: 60px;">
+            <div id="capture-area">
+                <div class="journal-page" style="position: relative; overflow: visible; margin-bottom: 30px;">
+                    <!-- Distintivo de Autoría -->
+                    <div id="journal-author-badge" class="author-badge" style="display: none;">
+                        <span class="author-label">Bitácora de</span>
+                        <span id="journal-author-name" class="author-name">@usuario</span>
+                    </div>
+
+                    <header class="journal-header">
+                        <div class="title-section">
+                            <h1 class="main-title">BOOK</h1>
+                            <h1 class="main-title">REVIEW</h1>
+                        </div>
+                        <div class="quote-container">
+                            <label for="fav-quote" class="quote-label">FRASE FAVORITA:</label>
+                            <div class="quote-box">
+                                <textarea id="fav-quote" placeholder="Tu frase favorita aquí... ✍️" required="true"
+                                    maxlength="250"></textarea>
+                            </div>
+                        </div>
+                    </header>
+
+                    <section class="main-content">
+                        <div class="content-left">
+                            <div class="photo-box" id="photo-box">
+                                <div class="photo-content" id="photo-preview">
+                                    <span class="photo-label">PORTADA</span>
+                                    <span class="photo-label">AQUÍ</span>
+                                </div>
+                            </div>
+                            <button type="button" id="search-cover-btn" class="journal-btn">BUSCAR PORTADA ✨</button>
+
+                            <div class="about-section">
+                                <h2 class="sub-title">SOBRE EL LIBRO</h2>
+                                <div class="pill-inputs">
+                                    <div class="pill-input">
+                                        <label for="title">Título:</label>
+                                        <textarea id="title" rows="1" required="true"></textarea>
+                                    </div>
+                                    <div class="pill-input">
+                                        <label for="author">Autor:</label>
+                                        <textarea id="author" rows="1" required="true" required="true"></textarea>
+                                    </div>
+                                    <div class="pill-input checkbox-group-vertical">
+                                        <label for="recommend">¿Lo recomendarías?</label>
+                                        <label class="checkbox-wrapper-vertical clickable-label" for="recommend">
+                                            <input type="checkbox" id="recommend" class="journal-checkbox"
+                                                required="true">
+                                            <span class="checkbox-label" id="recommend-text">No</span>
+                                        </label>
+                                    </div>
+                                    <div class="pill-input">
+                                        <label for="fav-character">Personaje fav:</label>
+                                        <textarea id="fav-character" rows="1"></textarea>
+                                    </div>
+                                    <div class="pill-input">
+                                        <label for="start-date">Iniciado:</label>
+                                        <input type="text" id="start-date" placeholder="DD/MM/AA" required="true">
+                                    </div>
+                                    <div class="pill-input">
+                                        <label for="end-date">Terminado:</label>
+                                        <input type="text" id="end-date" placeholder="DD/MM/AA" required="true">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="content-right">
+                            <div class="rate-section">
+                                <h3 class="rate-label">CALIFICACIÓN</h3>
+                                <div class="star-rating" id="star-rating" data-rating="0">
+                                    <div class="star-cell" data-index="1">
+                                        <div class="star-hitbox left" data-value="0.5"></div>
+                                        <div class="star-hitbox right" data-value="1.0"></div>
+                                        <div class="star-visual">
+                                            <svg class="star-svg outline" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                            <div class="star-fill-wrapper">
+                                                <svg class="star-svg filled" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="star-cell" data-index="2">
+                                        <div class="star-hitbox left" data-value="1.5"></div>
+                                        <div class="star-hitbox right" data-value="2.0"></div>
+                                        <div class="star-visual">
+                                            <svg class="star-svg outline" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                            <div class="star-fill-wrapper">
+                                                <svg class="star-svg filled" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="star-cell" data-index="3">
+                                        <div class="star-hitbox left" data-value="2.5"></div>
+                                        <div class="star-hitbox right" data-value="3.0"></div>
+                                        <div class="star-visual">
+                                            <svg class="star-svg outline" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                            <div class="star-fill-wrapper">
+                                                <svg class="star-svg filled" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="star-cell" data-index="4">
+                                        <div class="star-hitbox left" data-value="3.5"></div>
+                                        <div class="star-hitbox right" data-value="4.0"></div>
+                                        <div class="star-visual">
+                                            <svg class="star-svg outline" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                            <div class="star-fill-wrapper">
+                                                <svg class="star-svg filled" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="star-cell" data-index="5">
+                                        <div class="star-hitbox left" data-value="4.5"></div>
+                                        <div class="star-hitbox right" data-value="5.0"></div>
+                                        <div class="star-visual">
+                                            <svg class="star-svg outline" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                            <div class="star-fill-wrapper">
+                                                <svg class="star-svg filled" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="review-section">
+                                <h3 class="review-label">RESEÑA</h3>
+                                <div class="review-box">
+                                    <textarea id="review-text" placeholder="Escribe aquí tu reseña..."
+                                        required="true"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="music-section">
+                                <div class="music-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span class="music-icon">🎵</span>
+                                        <span class="music-label">SOUNDTRACK</span>
+                                    </div>
+                                    <button type="button" id="music-reset-btn" class="mini-btn"
+                                        style="display: none; font-size: 0.8em; padding: 4px 8px;">Cambiar 🔄</button>
+                                </div>
+                                <div class="music-input-group">
+                                    <input type="text" id="music-link" placeholder="Pega link de Spotify (Recomendado)">
+                                    <button type="button" id="music-file-trigger" class="mini-btn"
+                                        title="Cargar archivo MP3 (Garantizado)">📁</button>
+                                    <input type="file" id="music-file" hidden accept="audio/*">
+                                </div>
+
+                                <div id="player-container" class="player-container">
+                                    <div id="custom-player" class="custom-player" style="display: none;">
+                                        <div class="player-controls">
+                                            <button type="button" id="play-pause-btn" class="control-btn">▶️</button>
+                                            <div class="progress-section">
+                                                <input type="range" id="progress-bar" value="0" step="0.1"
+                                                    class="custom-range">
+                                            </div>
+                                            <div class="volume-section">
+                                                <span class="vol-icon">🔊</span>
+                                                <input type="range" id="volume-bar" value="80" step="1"
+                                                    class="custom-range volume-slider">
+                                            </div>
+                                        </div>
+                                        <div id="track-name-display" class="track-name-mini">Nombre de la canción</div>
+                                    </div>
+                                    <div id="spotify-container" style="display: none; width: 100%;"></div>
+                                    <div id="no-player-msg" class="no-player">Usa Spotify o un archivo local para mejor
+                                        experiencia</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+                </div>
+            </div>
+
+            <!-- BARRA COMUNIDAD -->
+            <div id="journal-social-container" class="community-bar" style="display: none;"></div>
+
+            <!-- BARRA DE ACCIONES UNIFICADA (VOLVER / COPIAR / GUARDAR) -->
+            <div class="journal-back-container" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 30px; margin-bottom: 50px;">
+                <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none; min-width: 180px; height: 50px;">GUARDAR EN MIS LIBROS 💾</button>
+                <button type="button" id="share-whatsapp-btn" class="share-btn" style="display: none; min-width: 180px; height: 50px;">COPIAR TEXTO 📋</button>
+                <button type="button" id="journal-back-btn" class="journal-nav-btn" style="min-width: 140px; height: 50px; font-size: 1.1rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;">VOLVER 📖</button>
+            </div>
+        </div>
+
+
+        <!-- SECCIÓN: JUEGOS (ARCADE) -->
+        <div id="games-view" class="view-content" style="display: none;">
+            <div class="arcade-lobby">
+                <div class="arcade-title-container">
+                    <h2>SALÓN DE JUEGOS 🕹️</h2>
+                </div>
+                <p style="text-align: center; font-family: var(--font-journal); opacity: 0.8; margin-bottom: 20px;">
+                    Gana monedas y demuestra tus conocimientos literarios. Partidas diarias limitadas.
+                </p>
+
+                <!-- Joker Shop: Responsive & Semantic -->
+                <div class="joker-shop-container">
+                    <h4
+                        style="font-size: 0.9rem; letter-spacing: 1px; text-align: center; margin-bottom: 15px; opacity: 0.7;">
+                        🛍️ TIENDA DE COMODINES</h4>
+                    <div class="joker-items-grid">
+                        <div class="shop-item" title="50:50 (Elimina 2 incorrectas)">
+                            <div class="emoji">🌓</div>
+                            <div class="price">15💰</div>
+                            <button onclick="triviaGame.buyJoker('5050', 15)" class="buy-btn">COMPRAR</button>
+                        </div>
+                        <div class="shop-item" title="Público (Pide ayuda)">
+                            <div class="emoji">📊</div>
+                            <div class="price">10💰</div>
+                            <button onclick="triviaGame.buyJoker('public', 10)" class="buy-btn">COMPRAR</button>
+                        </div>
+                        <div class="shop-item" title="IA (Bibliotecario Real)">
+                            <div class="emoji">🤖</div>
+                            <div class="price">30💰</div>
+                            <button onclick="triviaGame.buyJoker('ia', 30)" class="buy-btn">COMPRAR</button>
+                        </div>
+                    </div>
+                    <div id="joker-inventory-display" class="joker-inventory-summary">
+                        <span>Mochila:</span>
+                        <span><span id="inv-5050">0</span> 🌓</span>
+                        <span><span id="inv-public">0</span> 📊</span>
+                        <span><span id="inv-ia">0</span> 🤖</span>
+                    </div>
+                </div>
+
+                <div class="arcade-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+                    <!-- Card: Trivia -->
+                    <div class="arcade-card" id="play-trivia-btn" style="cursor: pointer;">
+                        <div class="card-icon" style="font-size: 3rem; margin-bottom: 15px; text-align: center;">✍️
+                        </div>
+                        <h3>Trivia Literaria</h3>
+                        <p>Responde preguntas sobre tus libros favoritos. ¡Estilo Millonario!</p>
+                        <div class="play-btn-text"
+                            style="font-weight: bold; color: var(--secondary-color); margin-top: 20px; text-align: center;">
+                            ¡JUGAR AHORA!</div>
+                    </div>
+
+                    <!-- Card: Memorama -->
+                    <div class="arcade-card">
+                        <div class="card-icon" style="font-size: 3rem; margin-bottom: 15px; text-align: center;">🃏
+                        </div>
+                        <h3>Memorama</h3>
+                        <p>Encuentra las parejas de autores y libros. ¡Ahora con niveles!</p>
+
+                        <div class="game-controls">
+                            <label for="memory-difficulty"
+                                style="display: block; font-size: 0.8rem; margin-bottom: 5px; opacity: 0.6; text-align: center;">DIFICULTAD:</label>
+                            <select id="memory-difficulty" onclick="event.stopPropagation()">
+                                <option value="easy">Fácil (6 parejas)</option>
+                                <option value="normal" selected>Normal (8 parejas)</option>
+                                <option value="hard">Difícil (10 parejas)</option>
+                                <option value="expert">Experto (12 parejas)</option>
+                            </select>
+                            <div id="play-memory-btn" class="play-btn" style="text-align: center;">¡JUGAR AHORA!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="daily-limits-info"
+                    style="margin-top: 50px; padding: 20px; border-top: 2px dashed rgba(107,79,63,0.1); text-align: center;">
+                    <p style="font-family: var(--font-journal); font-size: 1.1rem; opacity: 0.6;">
+                        Partidas restantes hoy: <span id="daily-games-left">--</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Contenedor dinámico para el juego activo (Memorama) -->
+            <div id="active-game-container"
+                style="display: none; width: 100%; min-height: 85vh; padding: 20px; position: relative; background: var(--bg-color);">
+                <button id="fullscreen-game-btn" class="game-control-btn"
+                    style="position: absolute; top: 30px; left: 20px;" title="Pantalla Completa">⛶</button>
+                <button id="back-to-arcade-btn" class="game-control-btn"
+                    style="position: absolute; top: 30px; right: 20px;" title="Volver al Salón">⬅️</button>
+                <div id="game-canvas" style="width: 100%; max-width: 1200px; margin: 0 auto; padding-top: 80px;"></div>
+            </div>
+        </div>
+
+        <!-- VISTA CASINO -->
+        <div id="casino-view" class="view-content" style="display: none;">
+            <div class="casino-view">
+                <header class="casino-header">
+                    <h2 class="casino-title">🎰 Rincón del Azar</h2>
+                    <div class="token-balance-card">
+                        <span class="icon">🪙</span>
+                        <span class="amount" id="casino-token-amount">0</span>
+                        <span class="label">Fichas Literarias</span>
+                    </div>
+                </header>
+
+                <!-- LOBBY: Selección de Juegos -->
+                <div id="casino-lobby" class="casino-lobby">
+                    <div class="games-grid">
+                        <div class="casino-game-card" id="open-ruleta-btn">
+                            <span class="game-icon">🎡</span>
+                            <h3>Ruleta de la Suerte</h3>
+                            <p>¡Giro gratis diario! Gana monedas y XP.</p>
+                        </div>
+                        <div class="casino-game-card locked" title="Próximamente">
+                            <span class="game-icon">🃏</span>
+                            <h3>Blackjack Lector</h3>
+                            <p>(Próximamente)</p>
+                        </div>
+                    </div>
+
+                    <section class="casino-shop">
+                        <h3>🛒 Canjear Monedas por Fichas</h3>
+                        <div class="token-offers">
+                            <div class="offer-card" data-qty="1" data-price="50">
+                                <span class="token-icon">🪙</span>
+                                <span class="token-qty">1 Ficha</span>
+                                <button class="price-btn">50 💰</button>
+                            </div>
+                            <div class="offer-card" data-qty="5" data-price="225">
+                                <span class="token-icon">🪙🪙</span>
+                                <span class="token-qty">5 Fichas</span>
+                                <button class="price-btn">225 💰</button>
+                            </div>
+                            <div class="offer-card" data-qty="10" data-price="400">
+                                <span class="token-icon">🪙🪙🪙</span>
+                                <span class="token-qty">10 Fichas</span>
+                                <button class="price-btn">400 💰</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- JUEGO: Ruleta -->
+                <div id="game-screen-ruleta" class="game-screen">
+                    <div class="wheel-outer-container">
+                        <button id="casino-fullscreen-btn" class="fullscreen-toggle-btn" title="Pantalla Completa">⛶</button>
+                        <div class="wheel-pointer"></div>
+                        <div class="wheel-container">
+                            <div id="wheel-main" class="wheel-main">
+                                <!-- Se generará dinámicamente por JS para mostrar premios -->
+                            </div>
+                            <button id="spin-wheel-btn" class="wheel-spin-btn">GIRAR<br>🍀</button>
+                        </div>
+                    </div>
                     
-                    <div class="about-section">
-                        <h2 class="sub-title">SOBRE EL LIBRO</h2>
-                        <div class="pill-inputs">
-                            <div class="pill-input">
-                                <label for="title">Título:</label>
-                                <textarea id="title" rows="1" required="true"></textarea>
-                            </div>
-                            <div class="pill-input">
-                                <label for="author">Autor:</label>
-                                <textarea id="author" rows="1" required="true" required="true"></textarea>
-                            </div>
-                            <div class="pill-input checkbox-group-vertical">
-                                <label for="recommend">¿Lo recomendarías?</label>
-                                <label class="checkbox-wrapper-vertical clickable-label" for="recommend">
-                                    <input type="checkbox" id="recommend" class="journal-checkbox" required="true">
-                                    <span class="checkbox-label" id="recommend-text">No</span>
-                                </label>
-                            </div>
-                            <div class="pill-input">
-                                <label for="fav-character">Personaje fav:</label>
-                                <textarea id="fav-character" rows="1"></textarea>
-                            </div>
-                            <div class="pill-input">
-                                <label for="start-date">Iniciado:</label>
-                                <input type="text" id="start-date" placeholder="DD/MM/AA" required="true">
-                            </div>
-                            <div class="pill-input">
-                                <label for="end-date">Terminado:</label>
-                                <input type="text" id="end-date" placeholder="DD/MM/AA" required="true">
-                            </div>
-                        </div>
-                    </div>
+                    <p class="wheel-hint">El primer giro de cada día es <b>GRATIS</b>. <br> Luego cuesta 1 ficha 🪙.</p>
+                    <button class="back-to-lobby-btn" id="casino-back-btn">⬅ Volver al Lobby</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <div class="action-footer" id="journal-footer" style="display: none;">
+        <button type="button" id="journal-like-btn" class="share-btn like-btn" style="display: none;">❤️ <span id="journal-like-count">0</span></button>
+        <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none;">GUARDAR LIBRO 💾</button>
+        <button type="button" id="share-whatsapp-btn" class="share-btn">COPIAR TEXTO 📋</button>
+    </div>
+
+    <!-- Modal de Retos (Hub: Misiones, Trivia, Tienda) -->
+    <div id="challenges-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 850px;">
+            <span class="close-modal" id="close-challenges-modal">&times;</span>
+            <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                <h2 class="sub-title" style="margin: 0;">Tienda de Recompensas 🛒</h2>
+                <p style="font-family: var(--font-pill); font-size: 1.1rem; opacity: 0.9;">
+                    Tu saldo actual: <span id="hub-user-coins"
+                        style="font-weight: bold; color: var(--secondary-color);">0</span> 💰
+                </p>
+            </div>
+
+            <!-- Contenido de la Tienda -->
+            <div id="tab-store" class="challenge-tab-content" style="margin-top: 20px;">
+                <div class="store-tabs-nav" id="store-category-tabs">
+                    <button class="store-tab-btn active" data-store-cat="frame">Marcos 🖼️</button>
+                    <button class="store-tab-btn" data-store-cat="title">Títulos 🎖️</button>
+                    <button class="store-tab-btn" data-store-cat="skin">Temas 🎨</button>
                 </div>
 
-                <div class="content-right">
-                    <div class="rate-section">
-                        <h3 class="rate-label">CALIFICACIÓN</h3>
-                        <div class="star-rating" id="star-rating" data-rating="0">
-                            <div class="star-cell" data-index="1">
-                                <div class="star-hitbox left" data-value="0.5"></div>
-                                <div class="star-hitbox right" data-value="1.0"></div>
-                                <div class="star-visual">
-                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    <div class="star-fill-wrapper">
-                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="star-cell" data-index="2">
-                                <div class="star-hitbox left" data-value="1.5"></div>
-                                <div class="star-hitbox right" data-value="2.0"></div>
-                                <div class="star-visual">
-                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    <div class="star-fill-wrapper">
-                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="star-cell" data-index="3">
-                                <div class="star-hitbox left" data-value="2.5"></div>
-                                <div class="star-hitbox right" data-value="3.0"></div>
-                                <div class="star-visual">
-                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    <div class="star-fill-wrapper">
-                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="star-cell" data-index="4">
-                                <div class="star-hitbox left" data-value="3.5"></div>
-                                <div class="star-hitbox right" data-value="4.0"></div>
-                                <div class="star-visual">
-                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    <div class="star-fill-wrapper">
-                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="star-cell" data-index="5">
-                                <div class="star-hitbox left" data-value="4.5"></div>
-                                <div class="star-hitbox right" data-value="5.0"></div>
-                                <div class="star-visual">
-                                    <svg class="star-svg outline" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    <div class="star-fill-wrapper">
-                                        <svg class="star-svg filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="review-section">
-                        <h3 class="review-label">RESEÑA</h3>
-                        <div class="review-box">
-                            <textarea id="review-text" placeholder="Escribe aquí tu reseña..." required="true"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="music-section">
-                        <div class="music-header">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span class="music-icon">🎵</span>
-                                <span class="music-label">SOUNDTRACK</span>
-                            </div>
-                            <button type="button" id="music-reset-btn" class="mini-btn" style="display: none; font-size: 0.8em; padding: 4px 8px;">Cambiar 🔄</button>
-                        </div>
-                        <div class="music-input-group">
-                            <input type="text" id="music-link" placeholder="Pega link de Spotify (Recomendado)">
-                            <button type="button" id="music-file-trigger" class="mini-btn" title="Cargar archivo MP3 (Garantizado)">📁</button>
-                            <input type="file" id="music-file" hidden accept="audio/*">
-                        </div>
-                        
-                        <div id="player-container" class="player-container">
-                            <div id="custom-player" class="custom-player" style="display: none;">
-                                <div class="player-controls">
-                                    <button type="button" id="play-pause-btn" class="control-btn">▶️</button>
-                                    <div class="progress-section">
-                                        <input type="range" id="progress-bar" value="0" step="0.1" class="custom-range">
-                                    </div>
-                                    <div class="volume-section">
-                                        <span class="vol-icon">🔊</span>
-                                        <input type="range" id="volume-bar" value="80" step="1" class="custom-range volume-slider">
-                                    </div>
-                                </div>
-                                <div id="track-name-display" class="track-name-mini">Nombre de la canción</div>
-                            </div>
-                            <div id="spotify-container" style="display: none; width: 100%;"></div>
-                            <div id="no-player-msg" class="no-player">Usa Spotify o un archivo local para mejor experiencia</div>
-                        </div>
-                    </div>
+                <div id="challenges-store-items" style="display: flex; flex-direction: column;">
+                    <p class="empty-msg">Cargando tienda...</p>
                 </div>
-            </section>
+            </div>
         </div>
     </div>
-    
-    <div class="action-footer">
-        <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none;">GUARDAR EN MIS LIBROS 💾</button>
-        <button type="button" id="share-whatsapp-btn" class="share-btn" style="display: none;">COPIAR AL PORTAPAPELES 📋</button>
+
+
+    <!-- Modal de Confirmación Genérico -->
+    <div id="generic-confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 400px; text-align: center; padding: 40px;">
+            <h2 id="confirm-title" class="sub-title">¿Estás seguro?</h2>
+            <p id="confirm-message" style="margin: 20px 0; font-family: var(--font-journal); font-size: 1.2rem;">Esta
+                acción no se puede deshacer.</p>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button id="confirm-cancel-btn" class="journal-btn"
+                    style="background: #e0e0e0; color: #666;">CANCELAR</button>
+                <button id="confirm-accept-btn" class="journal-btn">CONFIRMAR</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Modales de Autenticación -->
+    <!-- Modal de Confirmación de Donación -->
+    <div id="donation-confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 400px; text-align: center; padding: 40px;">
+            <span class="close-modal" id="close-donation-modal">&times;</span>
+            <div style="font-size: 3rem; margin-bottom: 5px;">☕</div>
+            <h2 class="sub-title">Confirmar Propina</h2>
+            <p id="donation-confirm-msg" class="auth-switch-text" style="font-size: 1.2rem; margin: 20px 0;">
+                ¿Quieres invitar un café a este autor?
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+                <button type="button" id="cancel-donation-btn" class="journal-btn"
+                    style="background: white; color: var(--text-color);">Cancelar</button>
+                <button type="button" id="confirm-donation-btn" class="journal-btn"
+                    style="background: var(--secondary-color); color: white;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="auth-modal" class="modal" style="display: none;">
         <div class="modal-content journal-page">
             <span class="close-modal">&times;</span>
             <h2 id="modal-title" class="sub-title">Iniciar Sesión</h2>
             <form id="auth-form" class="pill-inputs auth-form-wide">
+                <div class="pill-input" id="email-group">
+                    <label for="auth-email">Email:</label>
+                    <input type="email" id="auth-email" placeholder="tu@email.com">
+                </div>
                 <div class="pill-input">
-                    <label for="auth-username">Usuario:</label>
+                    <label for="auth-username" id="username-label">Usuario:</label>
                     <input type="text" id="auth-username" placeholder="Tu nombre de usuario">
                 </div>
                 <div class="pill-input password-input-wrapper">
@@ -220,8 +689,51 @@
                     <input type="password" id="auth-password" placeholder="Tu contraseña">
                     <button type="button" id="toggle-password" class="toggle-password-btn">👁️</button>
                 </div>
+                <p id="forgot-password-container" class="auth-switch-text"
+                    style="text-align: right; margin-top: -20px; font-size: 0.9rem;">
+                    <span id="forgot-password-link" style="cursor: pointer; text-decoration: underline;">¿Olvidaste tu
+                        contraseña?</span>
+                </p>
                 <button type="submit" id="auth-submit-btn" class="journal-btn">ENTRAR ✨</button>
-                <p id="auth-switch" class="auth-switch-text">¿No tienes cuenta? <span id="switch-to-register">Regístrate aquí</span></p>
+                <p id="auth-switch" class="auth-switch-text">¿No tienes cuenta? <span id="switch-to-register">Regístrate
+                        aquí</span></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Solicitar Reset de Contraseña -->
+    <div id="request-reset-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 400px;">
+            <span class="close-modal">&times;</span>
+            <h2 class="sub-title">Recuperar Cuenta</h2>
+            <form id="request-reset-form" class="pill-inputs auth-form-wide">
+                <p class="auth-switch-text">Te enviaremos un correo para restablecer tu contraseña.</p>
+                <div class="pill-input">
+                    <label for="reset-email">Tu Email:</label>
+                    <input type="email" id="reset-email" placeholder="ejemplo@correo.com" required>
+                </div>
+                <button type="submit" class="journal-btn">ENVIAR CORREO 📧</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Establecer Nueva Contraseña -->
+    <div id="update-password-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 400px;">
+            <span class="close-modal">&times;</span>
+            <h2 class="sub-title">Nueva Contraseña</h2>
+            <form id="update-password-form" class="pill-inputs auth-form-wide">
+                <p class="auth-switch-text">Ingresa tu nueva contraseña para recuperar el acceso.</p>
+                <div class="pill-input password-input-wrapper">
+                    <label for="new-password">Contraseña:</label>
+                    <input type="password" id="new-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                </div>
+                <div class="pill-input password-input-wrapper">
+                    <label for="confirm-password">Repetir:</label>
+                    <input type="password" id="confirm-password" placeholder="Repite tu contraseña" required
+                        minlength="6">
+                </div>
+                <button type="submit" class="journal-btn">ACTUALIZAR 🔐</button>
             </form>
         </div>
     </div>
@@ -243,12 +755,43 @@
             <span class="close-modal" id="close-profile-modal">&times;</span>
             <h2 class="sub-title">Mi Perfil</h2>
             <div class="profile-header">
-                <div class="profile-avatar-container" id="profile-avatar-display">
-                    <img id="current-avatar" src="https://via.placeholder.com/100" alt="Avatar">
+                <div class="frame-wrapper" id="profile-frame">
+                    <div class="profile-avatar-container" id="profile-avatar-display">
+                        <img id="current-avatar" src="https://via.placeholder.com/100" alt="Avatar">
+                    </div>
                 </div>
-                <div class="profile-info-summary">
+                <div class="profile-info-summary" style="position: relative;">
                     <h3 id="profile-username-display">Usuario</h3>
+                    <button type="button" id="profile-stats-btn" class="mini-btn" title="Ver Estadísticas"
+                        style="position: absolute; top: 0; right: 0; font-size: 1.2rem; padding: 8px; background: rgba(107, 79, 63, 0.1); border-radius: 50%; border: 1px solid var(--border-color); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10;">📊</button>
+                    <div id="profile-title-display" class="user-cosmetic-title"></div>
                     <p id="profile-email-display">usuario@ejemplo.com</p>
+                    <div class="profile-stats">
+                        <div class="stat-item" title="Tus Monedas">
+                            <span class="stat-icon">💰</span>
+                            <span id="profile-coins-display">0</span>
+                        </div>
+                        <div class="stat-item" title="Tu Experiencia">
+                            <span class="stat-icon">✨</span>
+                            <span id="profile-xp-display">0</span>
+                        </div>
+                    </div>
+                    <div class="profile-xp-section">
+                        <div class="xp-header">
+                            <span>Nivel <span id="profile-level-display">1</span></span>
+                            <span id="profile-xp-text">0 / 100 XP</span>
+                        </div>
+                        <div class="xp-bar-main">
+                            <div id="profile-xp-fill" class="xp-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-badges-section">
+                <h3 class="mini-sub-title">Mis Insignias 🏆</h3>
+                <div id="profile-badges-container" class="badges-grid">
+                    <!-- Se poblará dinámicamente estilo Steam -->
                 </div>
             </div>
             <form id="profile-form" class="pill-inputs auth-form-wide">
@@ -256,33 +799,317 @@
                     <label for="profile-username">Nombre:</label>
                     <input type="text" id="profile-username" placeholder="Tu nombre público">
                 </div>
-                <div class="pill-input">
-                    <label for="profile-avatar-url">URL Avatar:</label>
-                    <input type="text" id="profile-avatar-url" placeholder="https://enlace-a-tu-imagen.jpg">
+                <div class="pill-input avatar-input-group"
+                    style="height: auto; min-height: 60px; display: flex; flex-direction: column; align-items: stretch; padding: 12px 25px;">
+                    <div style="display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <label for="profile-avatar-url" style="margin: 0; white-space: nowrap; flex-shrink: 0;">Imagen
+                            de Perfil:</label>
+                        <input type="text" id="profile-avatar-url" placeholder="URL de la imagen..."
+                            style="flex: 1; border: none !important; background: transparent !important; padding: 0 !important; margin: 0 !important; height: 30px !important; box-shadow: none !important;">
+                        <button type="button" id="upload-avatar-trigger" class="mini-btn"
+                            title="Subir desde archivo local"
+                            style="width: 38px; height: 38px; min-width: 38px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; background: var(--secondary-color); color: white; border: none; flex-shrink: 0;">📁</button>
+                    </div>
+                    <input type="file" id="profile-avatar-file" accept="image/*" style="display: none;">
+                    <div class="avatar-meta-info"
+                        style="margin-top: 8px; border-top: 1px dashed rgba(107, 79, 63, 0.15); padding-top: 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                        <p style="font-size: 0.65rem; opacity: 0.6; margin: 0; line-height: 1.2;">MÁX: 2MB<br>(JPG, PNG,
+                            WEBP)</p>
+                        <p id="avatar-warning-text"
+                            style="font-size: 0.65rem; color: #ff6b6b; margin: 0; line-height: 1.2; text-align: right; flex: 1;">
+                            ⚠️ Imágenes inapropiadas resultarán en la eliminación del avatar y sanciones.</p>
+                    </div>
                 </div>
                 <div class="pill-input">
                     <label for="profile-bio">Biografía:</label>
                     <textarea id="profile-bio" rows="2" placeholder="Cuéntanos algo sobre ti..."></textarea>
+                </div>
+
+                <div class="preferences-grid">
+                    <div class="pill-input">
+                        <label for="profile-goal">Meta de lectura (libros/año):</label>
+                        <input type="number" id="profile-goal" min="0" placeholder="Ej: 12">
+                    </div>
+                    <div class="pill-input">
+                        <label for="profile-genres">Géneros favoritos:</label>
+                        <input type="text" id="profile-genres" placeholder="Ej: Fantasía, Terror, Sci-Fi">
+                    </div>
                 </div>
                 <button type="submit" id="save-profile-btn" class="journal-btn">GUARDAR CAMBIOS ✨</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de feedback (bienvenida / despedida) -->
-    <div id="feedback-modal" class="modal" style="display: none;">
-        <div class="modal-content journal-page" style="max-width: 420px; text-align: center;">
-            <h2 class="sub-title" id="feedback-title">¡Bienvenido!</h2>
-            <p id="feedback-message" class="auth-switch-text" style="margin-top: 10px;">
-                Nos alegra tenerte de vuelta en tu Diario de Libros.
-            </p>
+    <!-- Modal de Chat -->
+    <div id="chat-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 450px; padding: 30px;">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <img id="chat-friend-avatar" src="" class="mini-avatar">
+                    <h2 id="chat-friend-name" class="mini-sub-title" style="margin:0;">Chat con...</h2>
+                </div>
+                <div class="chat-controls">
+                    <span class="close-modal" id="close-chat-action"
+                        style="position:static; font-size:1.5rem; cursor:pointer;" title="Cerrar Chat">&times;</span>
+                </div>
+            </div>
+
+            <div id="chat-messages-container" class="chat-messages">
+                <p class="empty-msg">No hay mensajes aún. ¡Di hola!</p>
+            </div>
+            <div id="chat-typing-indicator" class="typing-indicator" style="display: none;">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Escribe un mensaje...">
+                <button id="send-chat-btn" class="icon-btn-send" title="Enviar Mensaje">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Notificaciones -->
+    <div id="notifications-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 450px;">
+            <span class="close-modal" id="close-notifications-modal">&times;</span>
+            <h2 class="sub-title">Notificaciones 🔔</h2>
+            <div id="notifications-list" class="notifications-list">
+                <p class="empty-msg">No tienes notificaciones nuevas.</p>
+            </div>
+            <button id="mark-all-read-btn" class="journal-btn"
+                style="margin-top: 30px; width: 100%; display: none; font-size: 1.1rem;">Marcar todas como
+                leídas</button>
+        </div>
+    </div>
+
+
+    <!-- Modal de Comunidad / Feed Global -->
+
+    <!-- Modal: Review Detail -->
+    <div id="review-detail-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page"
+            style="max-width: 760px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 20px;">
+            <span class="close-modal" id="close-review-detail">&times;</span>
+            <div id="review-detail-content">
+                <p class="empty-msg">Cargando reseña...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Administración -->
+    <div id="admin-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 800px;">
+            <span class="close-modal" id="close-admin-modal">&times;</span>
+            <h2 class="sub-title">PANEL DE CONTROL 🛡️</h2>
+
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="tab-trivia">Trivia ✍️</button>
+                <button class="admin-tab-btn" data-tab="tab-moderation">Moderación ⚖️</button>
+                <button class="admin-tab-btn" data-tab="tab-users">Usuarios 👥</button>
+            </div>
+
+            <!-- Tab: Gestión de Trivia -->
+            <div id="tab-trivia" class="admin-tab-content">
+                <!-- Sección colapsable: Generación Individual -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" data-target="ai-single">
+                        <span class="collapsible-icon">▼</span>
+                        <span>Generación Individual ✨</span>
+                    </button>
+                    <div id="ai-single" class="collapsible-content">
+                        <div class="admin-ai-section compact-ai-section">
+                            <p class="ai-desc">Usa Gemini para crear una pregunta según una temática específica.</p>
+                            <div class="compact-ai-fields">
+                                <div class="pill-input">
+                                    <label for="admin-ai-topic">Temática / Libro:</label>
+                                    <input type="text" id="admin-ai-topic"
+                                        placeholder="Ej: Don Quijote, Sci-Fi, Poesía...">
+                                </div>
+                                <div class="pill-input">
+                                    <label for="admin-ai-difficulty">Dificultad:</label>
+                                    <select id="admin-ai-difficulty" class="journal-input">
+                                        <option value="easy">Fácil (10💰)</option>
+                                        <option value="medium" selected>Media (25💰)</option>
+                                        <option value="hard">Difícil (50💰)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="admin-generate-ai-btn" class="journal-btn ai-btn">GENERAR CON IA ✨</button>
+                            <div id="ai-single-result-container" style="display: none; margin-top: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección colapsable: Generación en Lote -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" data-target="ai-batch">
+                        <span class="collapsible-icon">▼</span>
+                        <span>Generación en Lote 📋</span>
+                    </button>
+                    <div id="ai-batch" class="collapsible-content">
+                        <div class="admin-batch-section compact-batch-section">
+                            <p class="ai-desc">Genera múltiples preguntas automáticamente con temas aleatorios.</p>
+                            <div class="compact-batch-fields">
+                                <div class="pill-input">
+                                    <label for="ai-batch-topics">Temas (uno por línea):</label>
+                                    <textarea id="ai-batch-topics" rows="5"
+                                        placeholder="Harry Potter\nDon Quijote\n1984\nSherlock Holmes\n\nO déjalo vacío para temas aleatorios 🎲"
+                                        style="width: 100%; font-family: inherit; resize: vertical;"></textarea>
+                                </div>
+                                <div class="pill-input" style="flex: 1;">
+                                    <label for="ai-batch-size">Cantidad:</label>
+                                    <select id="ai-batch-size" class="journal-input batch-select">
+                                        <option value="6" selected>6 preguntas</option>
+                                        <option value="12">12 preguntas</option>
+                                        <option value="18">18 preguntas</option>
+                                        <option value="30">30 preguntas</option>
+                                    </select>
+                                </div>
+                                <div class="pill-input" style="flex: 1;">
+                                    <label for="ai-batch-difficulty">Dificultad:</label>
+                                    <select id="ai-batch-difficulty" class="journal-input batch-select">
+                                        <option value="mixed" selected>Mixta (Equilibrada)</option>
+                                        <option value="easy">Fácil (10💰)</option>
+                                        <option value="medium">Media (25💰)</option>
+                                        <option value="hard">Difícil (50💰)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="ai-batch-generate-btn" class="journal-btn ai-btn">GENERAR LOTE 📋</button>
+                            <div id="ai-batch-loader" style="display: none;">
+                                <span class="loader"></span> Generando lote...
+                            </div>
+                            <!-- Resultados del lote -->
+                            <div id="ai-batch-results" style="display: none; margin-top: 20px;">
+                                <h4>Resultados del Lote 📊</h4>
+                                <div id="batch-results-container"></div>
+                                <div style="margin-top: 15px;">
+                                    <button id="batch-save-all-btn" class="journal-btn" style="display: none;">GUARDAR
+                                        SELECCIONADAS 💾</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección colapsable: Añadir Manual -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" data-target="manual-add">
+                        <span class="collapsible-icon">▼</span>
+                        <span>Añadir Pregunta Manual ✍️</span>
+                    </button>
+                    <div id="manual-add" class="collapsible-content">
+                        <form id="admin-trivia-form" class="pill-inputs admin-form-wide">
+                            <div class="pill-input full-width">
+                                <label>Pregunta:</label>
+                                <input type="text" id="admin-q-text" required placeholder="¿Quién escribió... ?">
+                            </div>
+                            <div class="admin-options-header">
+                                <label>Opciones:</label>
+                                <button type="button" class="add-option-btn">+ Añadir opción</button>
+                            </div>
+                            <div id="admin-options-container" class="admin-options-container">
+                                <div class="pill-input admin-option">
+                                    <input type="text" class="admin-option-text" placeholder="Opción A" required>
+                                    <input type="radio" name="admin-correct" value="0" class="admin-correct-radio"
+                                        required>
+                                </div>
+                                <div class="pill-input admin-option">
+                                    <input type="text" class="admin-option-text" placeholder="Opción B" required>
+                                    <input type="radio" name="admin-correct" value="1" class="admin-correct-radio">
+                                </div>
+                                <div class="pill-input admin-option">
+                                    <input type="text" class="admin-option-text" placeholder="Opción C" required>
+                                    <input type="radio" name="admin-correct" value="2" class="admin-correct-radio">
+                                </div>
+                                <div class="pill-input admin-option">
+                                    <input type="text" class="admin-option-text" placeholder="Opción D" required>
+                                    <input type="radio" name="admin-correct" value="3" class="admin-correct-radio">
+                                </div>
+                            </div>
+                            <div class="pill-input full-width">
+                                <label>Recompensa (💰):</label>
+                                <input type="number" id="admin-q-reward" min="5" max="100" value="25" required>
+                            </div>
+                            <div class="manual-separator"></div>
+                            <button type="submit" class="journal-btn">AÑADIR PREGUNTA</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Sección colapsable: Ver Preguntas -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" data-target="view-questions">
+                        <span class="collapsible-icon">▼</span>
+                        <span>Ver Preguntas Existentes 👁️</span>
+                    </button>
+                    <div id="view-questions" class="collapsible-content">
+                        <div class="admin-view-controls"
+                            style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <p id="admin-questions-count" style="margin: 0; font-size: 0.95rem; opacity: 0.8;">
+                                    Cargando contador...</p>
+                                <button id="reload-questions-btn" class="journal-btn"
+                                    style="padding: 8px 16px; font-size: 0.9rem; margin: 0; width: auto;">🔄
+                                    RECARGAR</button>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <div class="pill-input"
+                                    style="flex: 2; min-width: 200px; margin: 0; padding: 10px 15px;">
+                                    <label style="font-size: 1rem;">🔍 Buscar:</label>
+                                    <input type="text" id="admin-search-questions" placeholder="Texto de la pregunta..."
+                                        style="font-size: 1rem;">
+                                </div>
+                                <div class="pill-input"
+                                    style="flex: 1; min-width: 150px; margin: 0; padding: 10px 15px;">
+                                    <label style="font-size: 1rem;">⚖️ Filtro:</label>
+                                    <select id="admin-filter-difficulty"
+                                        style="width: 100%; background: transparent; border: none; font-family: inherit; font-size: 1rem; color: var(--text-color); outline: none;">
+                                        <option value="all">Todas</option>
+                                        <option value="10">Fácil (10💰)</option>
+                                        <option value="25">Media (25💰)</option>
+                                        <option value="50">Difícil (50💰)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="admin-questions-container">
+                            <p class="empty-msg">Cargando preguntas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Moderación -->
+            <div id="tab-moderation" class="admin-tab-content" style="display: none;">
+                <h3>Reseñas de la Comunidad</h3>
+                <div id="admin-reviews-list" class="admin-list-container">
+                    <p class="empty-msg">Cargando reseñas...</p>
+                </div>
+            </div>
+
+            <!-- Tab: Usuarios -->
+            <div id="tab-users" class="admin-tab-content" style="display: none;">
+                <h3>Gestión de Usuarios</h3>
+                <div id="admin-users-list" class="admin-list-container">
+                    <p class="empty-msg">Cargando usuarios...</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+    <!-- SISTEMA MODULAR: inicializa Supabase (npm) y expone módulos en window -->
+    <script type="module" src="/src/main.js"></script>
+    <!-- LEGACY: código monolítico en transición (se irá eliminando por fases) -->
+    <script src="script.js" type="module"></script>
+
 </body>
+
 </html>

@@ -1,0 +1,74 @@
+.quiz-container {
+    padding: 20px;
+    text-align: center;
+}
+
+.quiz-question {
+    font-size: 1.4rem;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-option {
+    background: var(--box-bg);
+    border: 2px solid var(--border-color);
+    padding: 12px 20px;
+    border-radius: 15px;
+    font-family: var(--font-pill);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quiz-option:hover:not(:disabled) {
+    background: var(--secondary-color);
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Trivia Results (Upgrade) */
+.quiz-result-container {
+    padding: 20px;
+    background: rgba(107, 79, 63, 0.03);
+    border-radius: 20px;
+    border: 2px dashed rgba(141, 110, 99, 0.2);
+    margin-top: 15px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-status {
+    font-size: 1.8rem;
+    font-family: var(--font-hand);
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.status-success { color: #2ecc71; }
+.status-error { color: #e74c3c; }
+
+.rewards-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 35px;
+}
+
+.reward-badge {
+    background: white;
+    padding: 8px 15px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-pill);
+    font-weight: bold;
+    box-shadow: 0 4px 0 var(--border-color);
+}

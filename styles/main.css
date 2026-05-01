@@ -1,0 +1,27 @@
+/* === LEGACY BASE (Fase de transición) ===
+   Importa el index.css original para cubrir todos los estilos
+   que aún no han sido migrados a módulos individuales.
+   Se irá eliminando a medida que los módulos crezcan. */
+@import "../index.css";
+
+/* === MÓDULOS NUEVOS (override / mejoras sobre el legacy) === */
+@import "./variables.css";
+@import "./layout.css";
+@import "./components/modals.css";
+@import "./components/journal.css";
+@import "./components/store.css";
+@import "./components/social.css";
+@import "./components/trivia.css";
+@import "./components/dashboard.css";
+@import "./responsive.css";
+
+/* Estilos de transición temporales o específicos del entry point */
+.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.fade-in {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}

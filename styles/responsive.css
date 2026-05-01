@@ -1,0 +1,193 @@
+@media (max-width: 768px) {
+    /* Ajustes locales para vista vertical (Móvil) */
+    body {
+        padding: 80px 20px 30px; 
+    }
+
+    .journal-page {
+        padding: 30px 25px; /* Padding incrementado para dar aire en los bordes */
+        border-radius: 20px;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+    }
+
+    .journal-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 20px !important;
+        margin-bottom: 30px !important;
+    }
+
+    .main-title {
+        font-size: 2.2rem !important;
+        word-break: break-word !important;
+        line-height: 1.1 !important;
+    }
+
+    .dashboard-title {
+        font-size: 2.2rem !important;
+        word-break: break-word !important;
+        line-height: 1.1 !important;
+    }
+
+    .dashboard-subtitle {
+        font-size: 1.1rem !important;
+        word-break: break-word !important;
+        padding: 0 10px !important;
+    }
+
+    .quote-container {
+        width: 100% !important;
+        order: 2;
+    }
+
+    .quote-box {
+        height: auto !important;
+        min-height: 100px !important;
+        padding: 15px !important;
+        display: flex !important;
+    }
+
+    .main-content {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: 1fr !important; /* Reset grid if present */
+        gap: 30px !important;
+        width: 100% !important;
+    }
+
+    .content-left, .content-right {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    .photo-box {
+        width: 100% !important;
+        max-width: 280px !important;
+        height: auto !important;
+        aspect-ratio: 2/3 !important;
+        margin: 0 auto 20px auto !important;
+        order: 3;
+    }
+
+    .journal-btn {
+        width: 100% !important;
+        max-width: 280px !important;
+        margin: 0 auto 20px auto !important;
+        order: 4;
+    }
+
+    .about-section {
+        order: 5;
+        width: 100% !important;
+    }
+
+    .about-section .pill-inputs {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-inline: 0 !important;
+    }
+
+    .pill-input {
+        padding: 10px 15px !important;
+        gap: 10px !important;
+        min-height: 40px !important;
+        width: 100% !important;
+    }
+
+    .star-rating {
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .star-cell, .star-svg {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .review-box {
+        min-height: 350px !important;
+        height: auto !important;
+        border-radius: 20px !important;
+        display: flex !important;
+    }
+
+    .review-box textarea {
+        min-height: 350px !important;
+        font-size: 1.1rem !important;
+        line-height: 35px !important;
+        background-image: linear-gradient(transparent 34px, var(--border-color) 1px) !important;
+        background-size: 100% 35px !important;
+        background-position: 0 6px !important;
+        background-attachment: local !important; /* Líneas siguen al texto */
+        padding: 10px 20px !important;
+        position: relative !important;
+        inset: auto !important;
+        height: auto !important;
+    }
+
+    .action-footer {
+        flex-direction: column !important;
+        padding: 0 10px !important;
+        gap: 15px !important;
+    }
+
+    .share-btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Autor y Social */
+    .author-badge {
+        position: static !important;
+        margin: 0 auto 20px auto !important;
+        transform: none !important;
+        align-items: center !important;
+        width: fit-content !important;
+        display: flex; /* Sin !important para que JS pueda ocultarlo */
+    }
+
+    .social-aside {
+        position: relative !important;
+        right: auto !important;
+        top: auto !important;
+        transform: none !important;
+        display: none; /* Oculto por defecto en móvil */
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 0 !important;
+        width: 100% !important;
+        margin-top: 30px !important;
+        padding: 20px !important;
+        background: var(--box-bg) !important;
+        border-radius: 20px !important;
+        border: 3px solid var(--border-color) !important;
+        box-shadow: 5px 5px 0 var(--border-color) !important;
+    }
+
+    /* Regla de Oro: Si está vacío, JAMÁS se muestra */
+    .social-aside:empty {
+        display: none !important;
+    }
+
+    /* Solo mostrar si JS le quita el display: none o le pone flex Y tiene contenido */
+    .social-aside[style*="display: flex"]:not(:empty),
+    .social-aside[style*="display: block"]:not(:empty) {
+        display: flex !important;
+    }
+
+    .player-container {
+        padding: 0 !important; /* Elimina padding para que spotify encaje justo */
+        overflow: hidden !important;
+    }
+
+    #spotify-container iframe {
+        display: block !important;
+        border-radius: 12px;
+    }
+}

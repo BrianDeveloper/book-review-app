@@ -1,0 +1,26 @@
+:root {
+    /* Colores base (Light Mode) */
+    --bg-color: #f9f3e5;
+    --body-bg: #e8dfcc;
+    --text-color: #6b4f3f;
+    --border-color: #6b4f3f;
+    --box-bg: #f2e9d9;
+    --card-shadow: rgba(107, 79, 63, 0.1);
+    --secondary-color: #d4a373;
+    --placeholder-color: rgba(107, 79, 63, 0.5);
+    
+    --font-hand: 'Patrick Hand', cursive;
+    --font-pill: 'Averia Libre', cursive;
+}
+
+/* Modo Oscuro Overrides */
+body.dark-mode {
+    --bg-color: #2c2c2c;
+    --body-bg: #1a1a1a;
+    --text-color: #e0e0e0;
+    --border-color: #8c7365;
+    --box-bg: #333333;
+    --card-shadow: rgba(0, 0, 0, 0.5);
+    --secondary-color: #bfa085;
+    --placeholder-color: rgba(224, 224, 224, 0.4);
+}

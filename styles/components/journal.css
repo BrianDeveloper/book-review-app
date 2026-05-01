@@ -1,0 +1,163 @@
+.journal-page {
+    background-color: var(--bg-color);
+    width: 100%;
+    max-width: 900px;
+    padding: 60px 60px 10px 60px; /* Reducción máxima abajo */
+    border-radius: 40px;
+    box-shadow: 10px 10px 0px var(--card-shadow);
+    margin: 0 auto;
+}
+
+.journal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px; /* Reducido un poco */
+    position: relative;
+    gap: 40px;
+}
+
+.main-title {
+    font-size: 5rem;
+    line-height: 0.9;
+    letter-spacing: 2px;
+}
+
+.quote-container {
+    width: 400px;
+    max-width: 100%;
+}
+
+.quote-box {
+    width: 100%;
+    height: 180px;
+    border: 3px dashed var(--border-color);
+    border-radius: 30px;
+    padding: 0;
+    position: relative;
+    background-color: var(--bg-color);
+    overflow: hidden;
+}
+
+.quote-box label {
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.quote-box textarea {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent !important;
+    border: none;
+    resize: none;
+    font-family: var(--font-hand);
+    font-size: 1.4rem;
+    line-height: 38px;
+    padding: 50px 20px 10px;
+    color: var(--text-color);
+    outline: none;
+    overflow-y: auto;
+    z-index: 2;
+    pointer-events: auto !important;
+    box-sizing: border-box;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.photo-box {
+    width: 250px;
+    height: 350px;
+    background-color: var(--box-bg);
+    border: 3px solid var(--border-color);
+    border-radius: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+    margin: 0 auto 40px auto;
+    transition: transform 0.2s ease;
+}
+
+.photo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.journal-btn {
+    background-color: var(--box-bg);
+    border: 3px solid var(--border-color);
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: -20px;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.review-box {
+    width: 100%;
+    height: 550px;
+    background-color: var(--bg-color);
+    border: 3px solid var(--border-color);
+    border-radius: 40px;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.review-box textarea {
+    position: relative !important;
+    width: 100% !important;
+    height: 550px !important;
+    background: transparent !important;
+    background-image: linear-gradient(transparent 37px, var(--border-color) 1px) !important;
+    background-size: 100% 38px !important;
+    background-position: 0 10px !important;
+    background-attachment: local !important; /* Las líneas se mueven con el texto */
+    border: none;
+    resize: none;
+    font-family: var(--font-hand);
+    font-size: 1.8rem;
+    line-height: 38px !important;
+    padding: 10px 20px !important;
+    box-sizing: border-box;
+    overflow-y: scroll !important;
+    pointer-events: auto !important;
+    z-index: 2;
+    display: block !important;
+}
+
+.post-it-badge {
+    position: absolute;
+    top: -15px;
+    right: -10px;
+    background: #fff9c4;
+    padding: 10px 15px;
+    border: 1px solid #fbc02d;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    transform: rotate(3deg);
+    z-index: 10;
+    pointer-events: none;
+}
