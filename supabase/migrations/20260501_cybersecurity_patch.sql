@@ -49,6 +49,7 @@ CREATE POLICY "Users can manage their own reviews" ON public.reviews
 FOR ALL USING (auth.uid() = user_id);
 
 -- 5. SECURE RPC: The only authorized way to update stats from the client
+DROP FUNCTION IF EXISTS public.secure_increment_stats(INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION public.secure_increment_stats(p_coins_delta INTEGER, p_xp_delta INTEGER)
 RETURNS JSONB AS $$
 DECLARE
@@ -84,6 +85,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 6. Update Trivia RPC with bypass
+DROP FUNCTION IF EXISTS public.submit_trivia_answer(UUID, INT, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.submit_trivia_answer(
     p_question_id UUID,
     p_selected_index INT,
@@ -121,6 +123,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 7. Update Memory Game RPC with bypass
+DROP FUNCTION IF EXISTS public.record_game_session(TEXT, INTEGER, INTEGER, TIMESTAMPTZ);
 CREATE OR REPLACE FUNCTION public.record_game_session(
     p_game_type TEXT, 
     p_score INTEGER, 
@@ -147,6 +150,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 8. Update Missions/Likes RPC with bypass
+DROP FUNCTION IF EXISTS public.increment_user_stats(UUID, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION public.increment_user_stats(p_user_id UUID, p_add_coins INTEGER, p_add_xp INTEGER)
 RETURNS VOID AS $$
 BEGIN
@@ -158,6 +162,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 9. New Secure Store Purchase RPC
+DROP FUNCTION IF EXISTS public.secure_buy_item(TEXT, INTEGER);
 CREATE OR REPLACE FUNCTION public.secure_buy_item(p_item_id TEXT, p_price INTEGER)
 RETURNS JSONB AS $$
 DECLARE
