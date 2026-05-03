@@ -3199,6 +3199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const loadFriendSuggestions = async () => {
+        return; // TEMPORALMENTE DESACTIVADO (BUG EN SUGERENCIAS)
         const container = document.getElementById('friend-suggestions-rail');
         const section = document.getElementById('friend-suggestions-section');
         if (!container || !currentUser) return;
@@ -3236,10 +3237,10 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = suggestions.map(u => {
                 const avatar = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=60`;
                 return `
-                    <div class="suggestion-card">
+                    <div class="suggestion-card" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
                         <img src="${avatar}" class="suggestion-avatar" alt="Avatar">
                         <span class="suggestion-username" title="@${u.username}">@${u.username}</span>
-                        <button class="add-friend-mini-btn" data-user-id="${u.id}" onclick="sendFriendRequest('${u.id}', this)" title="Agregar Amigo" style="margin-top: 5px;">
+                        <button class="add-friend-mini-btn" data-user-id="${u.id}" onclick="event.stopPropagation(); sendFriendRequest('${u.id}', this)" title="Agregar Amigo" style="margin-top: 5px;">
                             +👥
                         </button>
                     </div>
@@ -3298,10 +3299,10 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (status === 'accepted') btnHtml = `<span style="opacity:0.6; font-size:0.85rem;">✅ Amigos</span>`;
             const avatar = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`;
             return `
-                <div class="friend-search-item">
+                <div class="friend-search-item" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
                     <img src="${avatar}" class="community-avatar" alt="Avatar">
                     <span class="community-username">@${u.username || 'usuario'}</span>
-                    ${btnHtml}
+                    <div onclick="event.stopPropagation()">${btnHtml}</div>
                 </div>`;
         }).join('');
     };
@@ -3462,6 +3463,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadFriendsList() {
         const listEl = document.getElementById('friends-list');
         if (!listEl || !currentUser) return;
+        
+        // Estado de carga inicial para evitar el parpadeo
+        listEl.innerHTML = '<p class="empty-msg" style="font-size: 0.9rem;">Cargando amigos... ⏳</p>';
 
         const sb = getSupabase();
         try {
@@ -3515,7 +3519,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const badgeHtml = unreadCount > 0 ? `<span class="friend-chat-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '';
 
                 return `
-                    <div class="friend-mini-item" onclick="openChat('${friendData.id}', '${friendData.username}', '${avatar}')">
+                    <div class="friend-mini-item" onclick="showFriendActions(event, '${friendData.id}', '${friendData.username}', '${avatar}')">
                         <div class="friend-item-wrapper">
                             <img src="${avatar}" class="community-avatar" alt="${friendData.username}">
                             ${badgeHtml}
@@ -3665,10 +3669,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateFriendListBadges = () => {
         // Esta función actualiza visualmente los badges sin recargar toda la lista
         Object.keys(friendUnreadMessages).forEach(friendId => {
-            const friendItem = document.querySelector(`[onclick*="openChat(\'${friendId}\'"]`);
+            // Buscamos específicamente dentro de la lista de amigos para no chocar con el botón del perfil
+            const friendListContainer = document.getElementById('friends-list');
+            if (!friendListContainer) return;
+            
+            const friendItem = friendListContainer.querySelector(`[onclick*="openChat(\'${friendId}\'"]`);
             if (!friendItem) return;
 
             const wrapper = friendItem.querySelector('.friend-item-wrapper');
+            if (!wrapper) return; // Previene el crash si la estructura del DOM no coincide
+
             let badge = wrapper.querySelector('.friend-chat-badge');
             const count = friendUnreadMessages[friendId];
 
@@ -3927,7 +3937,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const { data, error } = await sb
                 .from('profiles')
-                .select('username, xp, level, avatar_url, selected_frame, selected_title')
+                .select('id, username, xp, level, avatar_url, selected_frame, selected_title')
                 .order('xp', { ascending: false })
                 .limit(10);
 
@@ -3940,13 +3950,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             container.innerHTML = data.map((u, i) => {
                 const posClass = i < 3 ? `pos-${i + 1}` : '';
-                const frameClass = u.selected_frame !== 'none' ? `frame-${u.selected_frame}` : '';
+                const frameClass = u.selected_frame && u.selected_frame !== 'none' ? `frame-${u.selected_frame}` : '';
 
                 let titleText = '';
                 if (u.selected_title && u.selected_title !== 'none') {
                     if (typeof storeItems !== 'undefined') {
-                        const cosmeticItem = storeItems.find(i => i.id === u.selected_title);
-                        // Mostrar el campo "value" (ej. "Devoralibros 🐛") en vez del id técnico ("t_worm")
+                        const cosmeticItem = storeItems.find(it => it.id === u.selected_title);
                         titleText = cosmeticItem ? (cosmeticItem.value || cosmeticItem.name) : u.selected_title;
                     } else {
                         titleText = u.selected_title;
@@ -3956,7 +3965,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const avatar = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=50`;
 
                 return `
-                    <div class="ranking-item">
+                    <div class="ranking-item" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
                         <div class="ranking-pos ${posClass}">${i + 1}</div>
                         <div class="frame-wrapper mini-frame ${frameClass}">
                             <img src="${avatar}" class="ranking-avatar" alt="${u.username}">
@@ -4197,8 +4206,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         card.innerHTML = `
             <div class="community-user-info" style="display: flex; align-items: center; gap: 8px; position: relative;">
-                <img src="${profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`}" class="community-avatar" alt="Avatar">
-                <span class="community-username">@${profile.username || 'lector_anónimo'}</span>
+                <div class="profile-trigger" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <img src="${profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`}" class="community-avatar" alt="Avatar">
+                    <span class="community-username">@${profile.username || 'lector_anónimo'}</span>
+                </div>
                 ${addBtnHtml}
             </div>
             <div class="community-cover-box">
@@ -4211,6 +4222,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${reviewTextHtml}
             </div>
         `;
+
+        const profileTrigger = card.querySelector('.profile-trigger');
+        if (profileTrigger) {
+            profileTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (typeof window.loadPublicProfile === 'function') {
+                    window.loadPublicProfile(review.user_id);
+                }
+            });
+        }
 
         const addBtn = card.querySelector('.add-friend-mini-btn');
         if (addBtn) {
@@ -5260,6 +5281,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function switchView(targetViewId) {
         console.log("🔄 Cambiando a vista:", targetViewId);
+        
+        // Resetear scroll siempre al cambiar de vista (comportamiento estándar SPA)
+        window.scrollTo(0, 0);
+
         // Ocultar todas las vistas
         document.querySelectorAll('.view-content').forEach(view => {
             view.classList.remove('active');
@@ -5361,6 +5386,270 @@ document.addEventListener('DOMContentLoaded', () => {
             switchView('journal-view');
         }
     };
+
+    const publicProfileBackBtn = document.getElementById('public-profile-back-btn');
+    if (publicProfileBackBtn) {
+        publicProfileBackBtn.onclick = () => switchView('dashboard-view');
+    }
+
+    /**
+     * FASE 2: Carga los datos públicos de un usuario y los muestra en la SPA.
+     */
+    window.loadPublicProfile = async (userId) => {
+        const sb = getSupabase();
+        if (!sb || !userId) return;
+
+        console.log("👤 Cargando perfil público avanzado para:", userId);
+        
+        // 1. Mostrar vista y poner en "Cargando"
+        switchView('public-profile-view');
+        document.getElementById('public-author-name').textContent = "Cargando...";
+        document.getElementById('public-author-bio').textContent = "Buscando información del autor...";
+        document.getElementById('public-author-reviews-list').innerHTML = '<p class="empty-msg">Buscando bibliografía... ⏳</p>';
+        document.getElementById('public-author-badges').innerHTML = '';
+        document.getElementById('public-profile-social-actions').innerHTML = '';
+
+        try {
+            // 2. Obtener datos del perfil
+            const { data: profile, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+            if (error || !profile) throw error || new Error("Perfil no encontrado");
+
+            // 3. Rellenar Identidad
+            document.getElementById('public-author-name').textContent = profile.username || "Usuario Desconocido";
+            document.getElementById('public-author-bio').textContent = profile.bio || "Este autor prefiere mantener su biografía en secreto. 🤫";
+            document.getElementById('public-author-level').textContent = profile.level || 1;
+            document.getElementById('public-author-avatar').src = profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=150`;
+
+            // 4. Aplicar Cosméticos (Marcos, Títulos, Skins)
+            applyPublicCosmetics(profile);
+
+            // 5. Antigüedad (Ahora desde la tabla profiles sincronizada)
+            const rawDate = profile.created_at;
+            let formattedDate = "Recientemente";
+            
+            if (rawDate) {
+                const joinedDate = new Date(rawDate);
+                if (!isNaN(joinedDate.getTime())) {
+                    // Formato elegante: "mayo de 2024"
+                    formattedDate = joinedDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                }
+            }
+            document.getElementById('public-author-joined').textContent = `Lector desde ${formattedDate}`;
+
+            // 6. Cargar Insignias
+            loadPublicAuthorBadges(userId);
+
+            // 7. Acciones Sociales (Si no es el propio usuario)
+            if (currentUser && userId !== currentUser.id) {
+                loadPublicProfileSocialActions(userId, profile.username, profile.avatar_url);
+            } else {
+                document.getElementById('public-author-joined').textContent += " (Tú)";
+            }
+
+            // 8. Cargar Reseñas
+            if (typeof window.loadPublicAuthorReviews === 'function') {
+                window.loadPublicAuthorReviews(userId);
+            }
+
+        } catch (e) {
+            console.error("❌ Error cargando perfil público:", e);
+            showToast("No pudimos encontrar este perfil", "error");
+            switchView('community-view');
+        }
+    };
+
+    /**
+     * Carga las insignias desbloqueadas por el autor desde el campo 'badges' del perfil.
+     */
+    async function loadPublicAuthorBadges(userId) {
+        const sb = getSupabase();
+        const container = document.getElementById('public-author-badges');
+        if (!sb || !container) return;
+
+        // Recuperar el perfil de nuevo para asegurar que tenemos el campo badges actualizado
+        const { data: profile, error } = await sb.from('profiles').select('badges').eq('id', userId).single();
+        
+        if (error || !profile || !profile.badges || profile.badges.length === 0) {
+            container.innerHTML = '<p style="opacity: 0.5; font-size: 0.8rem;">Sin insignias aún.</p>';
+            return;
+        }
+
+        // El catálogo completo para que coincida con el sistema de insignias de la app
+        const BADGE_CATALOG_MAP = {
+            'b_first_review': { icon: '✍️', name: 'Escritor Novel' },
+            'b_reviews_10': { icon: '📖', name: 'Lector Constante' },
+            'b_level_10': { icon: '🌟', name: 'Erudito Nivel 10' },
+            'b_level_50': { icon: '👑', name: 'Gran Maestro' },
+            'b_trivia_50': { icon: '🧠', name: 'Mente Brillante' }
+        };
+
+        container.innerHTML = profile.badges.map(b => {
+            const info = BADGE_CATALOG_MAP[b.id] || { icon: '🏆', name: b.name || 'Logro' };
+            return `<span class="public-badge-icon" title="${info.name}">${info.icon}</span>`;
+        }).join('');
+    }
+
+    /**
+     * Gestiona el estado social (Agregar/Mensaje) desde el perfil.
+     */
+    async function loadPublicProfileSocialActions(userId, username, avatar) {
+        const sb = getSupabase();
+        const container = document.getElementById('public-profile-social-actions');
+        if (!sb || !container || !currentUser) return;
+
+        const { data: friendship } = await sb
+            .from('friendships')
+            .select('status, requester_id')
+            .or(`and(requester_id.eq.${currentUser.id},addressee_id.eq.${userId}),and(requester_id.eq.${userId},addressee_id.eq.${currentUser.id})`)
+            .single();
+
+        if (!friendship) {
+            container.innerHTML = `<button class="profile-social-btn btn-add" onclick="sendFriendRequest('${userId}', this)"><span>👤+</span> Agregar Amigo</button>`;
+        } else if (friendship.status === 'pending') {
+            container.innerHTML = `<span class="pending-tag">⏳ Solicitud Pendiente</span>`;
+        } else if (friendship.status === 'accepted') {
+            container.innerHTML = `<button class="profile-social-btn" onclick="window.openChat('${userId}', '${username}', '${avatar}')"><span>💬</span> Enviar Mensaje</button>`;
+        }
+    }
+
+    /**
+     * Aplica los cosméticos del usuario visitado a su ficha de autor.
+     */
+    function applyPublicCosmetics(profile) {
+        const frameContainer = document.getElementById('public-author-frame');
+        const titleDisplay = document.getElementById('public-author-title');
+        const skinContainer = document.getElementById('public-author-skin');
+
+        // Importamos dinámicamente el catálogo si es necesario
+        const items = (typeof storeItems !== 'undefined') ? storeItems : [];
+
+        // Marco
+        const frameId = profile.selected_frame || 'none';
+        const frameItem = items.find(i => i.id === frameId);
+        // Limpiar marcos previos
+        const frameClasses = items.filter(i => i.type === 'frame').map(i => i.css);
+        if (frameContainer) {
+            frameClasses.forEach(c => frameContainer.classList.remove(c));
+            if (frameItem && frameItem.css) frameContainer.classList.add(frameItem.css);
+        }
+
+        // Título
+        const titleId = profile.selected_title || 'none';
+        const titleItem = items.find(i => i.id === titleId);
+        if (titleDisplay) titleDisplay.textContent = titleItem ? titleItem.value : "";
+
+        // Skin (Aplicar solo al contenedor de la tarjeta)
+        const skinId = profile.selected_skin || 'none';
+        const skinItem = items.find(i => i.id === skinId);
+        const skinClasses = items.filter(i => i.type === 'skin').map(i => i.css);
+        if (skinContainer) {
+            skinClasses.forEach(c => { if(c) skinContainer.classList.remove(c); });
+            if (skinItem && skinItem.css) skinContainer.classList.add(skinItem.css);
+        }
+    }
+
+    /**
+     * FASE 3: Carga las 3 reseñas más recientes del autor y las renderiza en la columna derecha.
+     */
+    window.loadPublicAuthorReviews = async (userId) => {
+        const sb = getSupabase();
+        const container = document.getElementById('public-author-reviews-list');
+        if (!sb || !container || !userId) return;
+
+        try {
+            const { data, error } = await sb
+                .from('reviews')
+                .select('id, title, author, photo_url, review_text, created_at, rating')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(3);
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p class="empty-msg">Este autor aún no ha publicado ninguna reseña. 📚</p>';
+                document.getElementById('public-author-reviews-count').textContent = "0";
+                return;
+            }
+
+            // Actualizar contador
+            document.getElementById('public-author-reviews-count').textContent = data.length;
+
+            // 2. Renderizar tarjetas
+            container.innerHTML = data.map(rev => {
+                const cover = rev.photo_url || 'https://via.placeholder.com/60x90?text=Sin+Portada';
+                const snippet = rev.review_text ? (rev.review_text.substring(0, 100) + '...') : "Sin descripción.";
+                
+                return `
+                    <div class="public-review-item" onclick="openReviewFromDashboard('${rev.id}')" style="cursor: pointer;">
+                        <img src="${cover}" class="mini-cover" alt="${rev.title}">
+                        <div class="mini-review-content">
+                            <h4>${rev.title}</h4>
+                            <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 5px;">${rev.author}</p>
+                            <div class="mini-review-text">${snippet}</div>
+                            <div style="margin-top: 8px; font-size: 0.9rem;">
+                                ${'⭐'.repeat(Math.floor(rev.rating || 0))}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (e) {
+            console.error("❌ Error cargando reseñas públicas:", e);
+            container.innerHTML = '<p class="empty-msg">Error al cargar la bibliografía.</p>';
+        }
+    };
+
+    /**
+     * FASE 4: Muestra un menú de acciones para un amigo.
+     */
+    window.showFriendActions = (e, friendId, username, avatar) => {
+        e.stopPropagation();
+        
+        // Cerrar menús previos si existen
+        const oldMenu = document.querySelector('.floating-action-menu');
+        if (oldMenu) oldMenu.remove();
+
+        const menu = document.createElement('div');
+        menu.className = 'floating-action-menu';
+        
+        // Posicionamiento inteligente cerca del clic
+        menu.style.left = `${e.clientX - 80}px`;
+        menu.style.top = `${e.clientY + 15}px`;
+
+        menu.innerHTML = `
+            <button class="action-menu-item" id="act-view-profile">
+                <span>👤</span> Ver Perfil
+            </button>
+            <button class="action-menu-item" id="act-open-chat">
+                <span>💬</span> Abrir Chat
+            </button>
+        `;
+
+        document.body.appendChild(menu);
+
+        // Eventos
+        menu.querySelector('#act-view-profile').onclick = () => {
+            menu.remove();
+            if (typeof window.loadPublicProfile === 'function') window.loadPublicProfile(friendId);
+        };
+
+        menu.querySelector('#act-open-chat').onclick = () => {
+            menu.remove();
+            if (typeof window.openChat === 'function') window.openChat(friendId, username, avatar);
+        };
+
+        // Cerrar al hacer clic fuera
+        const closeMenu = (ev) => {
+            if (!menu.contains(ev.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 10);
+    };
+
     const dashChallengesBtn = document.getElementById('dash-challenges');
     const goHomeLogoBtn = document.getElementById('go-home-btn');
     const navNewEntryBtn = document.getElementById('new-entry-btn');
@@ -5461,6 +5750,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicializar Casino
     initCasino();
+
+    // Redirección Perfil Público -> Comunidad
+    const publicBackBtn = document.getElementById('public-profile-back-btn');
+    if (publicBackBtn) {
+        publicBackBtn.onclick = () => {
+            if (typeof switchView === 'function') switchView('community-view');
+        };
+    }
 });
 
 

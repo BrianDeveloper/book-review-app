@@ -251,6 +251,11 @@ export const triviaGame = {
             
             await sb.from('profiles').update({ jokers: newJokers }).eq('id', user.id);
             this.gameState.jokers = newJokers;
+            
+            // Actualizar UI del inventario en tiempo real
+            document.getElementById('inv-5050').textContent = this.gameState.jokers['5050'] || 0;
+            document.getElementById('inv-public').textContent = this.gameState.jokers['public'] || 0;
+            document.getElementById('inv-ia').textContent = this.gameState.jokers['ia'] || 0;
         } catch (e) {
             console.error('Error consumiendo comodín:', e);
         }

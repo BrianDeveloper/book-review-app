@@ -110,20 +110,19 @@
 
             <div class="dashboard-grid">
                 <div class="dashboard-card news-card">
-                    <h3>📢 ¿Qué ofrece nuestra App?</h3>
-                    <ul id="dashboard-news-list" style="list-style: none; padding: 0;">
-                        <li style="margin-bottom: 8px;">📖 <strong>Diario Personal:</strong> Reseñas con música, fotos y
-                            estilo.</li>
-                        <li style="margin-bottom: 8px;">🕹️ <strong>Arcade Literario:</strong> Trivia y Memorama con
-                            retos diarios.</li>
-                        <li style="margin-bottom: 8px;">🗨️ <strong>Chat Global:</strong> Conversa con otros lectores en
-                            tiempo real.</li>
-                        <li style="margin-bottom: 8px;">🎨 <strong>Perfil Custom:</strong> Presume tus marcos, avatar y
-                            bio.</li>
-                        <li style="margin-bottom: 8px;">💰 <strong>Economía:</strong> Gana monedas y compra comodines.
+                    <h3>📢 Últimas Actualizaciones (v1.1)</h3>
+                    <ul id="dashboard-news-list"
+                        style="list-style: none; padding: 0; font-size: 0.95rem; line-height: 1.5;">
+                        <li style="margin-bottom: 8px;">🎰 <strong>Casino:</strong> Nuevo temporizador automático para
+                            tu giro gratis diario.</li>
+                        <li style="margin-bottom: 8px;">👤 <strong>¡Nuevos Perfiles Públicos!:</strong> Vista dedicada
+                            para explorar a otros usuarios con su fecha de unión, insignias y botón de chat directo.
                         </li>
-                        <li style="margin-bottom: 8px;">📊 <strong>Estadísticas:</strong> Sigue tu nivel y progreso
-                            lector.</li>
+                        <li style="margin-bottom: 8px;">💬 <strong>Chat Estable:</strong> Corrección de bloqueos
+                            visuales y notificaciones mejoradas.</li>
+                        <li style="margin-bottom: 8px;">🕹️ <strong>Arcade:</strong> Interfaz más limpia con contadores
+                            en tiempo real (partidas y comodines).</li>
+                        <li style="margin-bottom: 8px;">🐞 <strong>Bugs:</strong> Corrección de errores menores.</li>
                     </ul>
                 </div>
 
@@ -139,9 +138,60 @@
             </div>
         </div>
 
-        <!-- Dashboard de Perfil (Estadísticas y Métricas) -->
         <div id="profile-stats-view" class="view-content" style="display: none;">
             <p class="empty-msg">Cargando tus métricas... 📊</p>
+        </div>
+
+        <!-- SECCIÓN: PERFIL PÚBLICO (FICHA DE AUTOR) -->
+        <div id="public-profile-view" class="view-content" style="display: none;">
+            <div class="public-profile-container">
+                <!-- Columna Izquierda: Tarjeta de Identidad -->
+                <div class="author-identity-column">
+                    <div class="author-card-skin" id="public-author-skin">
+                        <div class="author-card-content">
+                            <div class="frame-wrapper large-frame" id="public-author-frame">
+                                <div class="profile-avatar-container">
+                                    <img id="public-author-avatar" src="https://via.placeholder.com/150" alt="Avatar">
+                                </div>
+                            </div>
+                            <h2 id="public-author-name" class="author-name">Cargando...</h2>
+                            <div id="public-author-title" class="user-cosmetic-title">Lector Novel</div>
+                            <div class="author-stats-mini">
+                                <span title="Nivel"><span id="public-author-level">1</span> ⭐</span>
+                                <span title="Reseñas"><span id="public-author-reviews-count">0</span> 📚</span>
+                            </div>
+                            <div class="author-bio-container">
+                                <p id="public-author-bio" class="author-bio">Este usuario aún no ha escrito su
+                                    biografía.</p>
+                            </div>
+
+                            <!-- NUEVO: Muro de Insignias -->
+                            <div id="public-author-badges" class="public-badges-wall"></div>
+
+                            <!-- NUEVO: Acciones Sociales y Antigüedad -->
+                            <div class="public-social-footer">
+                                <div id="public-author-joined" class="author-joined-tag">Cargando...</div>
+                                <div id="public-profile-social-actions" class="social-actions-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="public-profile-back-btn" title="Volver a Comunidad"
+                        style="margin: 30px auto; width: 45px !important; height: 45px !important; min-width: 45px !important; border-radius: 50%; border: 2px solid var(--border-color); background: var(--bg-color); color: var(--secondary-color); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 0; outline: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m15 18-6-6 6-6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Columna Derecha: Bibliografía Reciente -->
+                <div class="author-reviews-column">
+                    <h3 class="mini-sub-title">Últimas Lecturas 📖</h3>
+                    <div id="public-author-reviews-list" class="public-reviews-feed">
+                        <p class="empty-msg">Cargando bibliografía...</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="community-view" class="view-content" style="display: none;">
@@ -186,13 +236,14 @@
                     </div>
 
 
+                    <!-- TEMPORALMENTE OCULTO (BUG)
                     <div id="friend-suggestions-section" style="margin-bottom: 25px; display: none;">
                         <h3 class="mini-sub-title" style="margin-bottom: 12px; font-size: 1rem; opacity: 0.9;">Lectores
                             recomendados ✨</h3>
                         <div id="friend-suggestions-rail" class="suggestions-rail">
-                            <!-- Sugerencias cargadas dinámicamente -->
                         </div>
                     </div>
+                    -->
 
                     <div id="friends-list-section" style="margin-bottom: 25px;">
                         <h3 class="mini-sub-title" style="margin-bottom: 15px; font-size: 1.1rem; text-align: center;">
@@ -200,7 +251,7 @@
                         <div class="friends-grid-wrapper">
                             <div id="friends-list" class="friends-mini-list">
                                 <!-- Los amigos se cargarán aquí como avatares circulares en grid -->
-                                <p class="empty-msg" style="font-size: 0.9rem;">No tienes amigos aún...</p>
+                                <p class="empty-msg" style="font-size: 0.9rem;">Cargando amigos... ⏳</p>
                             </div>
                         </div>
                     </div>
@@ -435,10 +486,15 @@
             <div id="journal-social-container" class="community-bar" style="display: none;"></div>
 
             <!-- BARRA DE ACCIONES UNIFICADA (VOLVER / COPIAR / GUARDAR) -->
-            <div class="journal-back-container" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 30px; margin-bottom: 50px;">
-                <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none; min-width: 180px; height: 50px;">GUARDAR EN MIS LIBROS 💾</button>
-                <button type="button" id="share-whatsapp-btn" class="share-btn" style="display: none; min-width: 180px; height: 50px;">COPIAR TEXTO 📋</button>
-                <button type="button" id="journal-back-btn" class="journal-nav-btn" style="min-width: 140px; height: 50px; font-size: 1.1rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;">VOLVER 📖</button>
+            <div class="journal-back-container"
+                style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 30px; margin-bottom: 50px;">
+                <button type="button" id="save-review-btn" class="share-btn save-btn"
+                    style="display: none; min-width: 180px; height: 50px;">GUARDAR EN MIS LIBROS 💾</button>
+                <button type="button" id="share-whatsapp-btn" class="share-btn"
+                    style="display: none; min-width: 180px; height: 50px;">COPIAR TEXTO 📋</button>
+                <button type="button" id="journal-back-btn" class="journal-nav-btn"
+                    style="min-width: 140px; height: 50px; font-size: 1.1rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;">VOLVER
+                    📖</button>
             </div>
         </div>
 
@@ -514,14 +570,15 @@
                             </select>
                             <div id="play-memory-btn" class="play-btn" style="text-align: center;">¡JUGAR AHORA!</div>
                         </div>
-                    </div>
-                </div>
 
-                <div id="daily-limits-info"
-                    style="margin-top: 50px; padding: 20px; border-top: 2px dashed rgba(107,79,63,0.1); text-align: center;">
-                    <p style="font-family: var(--font-journal); font-size: 1.1rem; opacity: 0.6;">
-                        Partidas restantes hoy: <span id="daily-games-left">--</span>
-                    </p>
+                        <div id="daily-limits-info"
+                            style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(107,79,63,0.2); text-align: center;">
+                            <p
+                                style="font-family: var(--font-journal); font-size: 0.95rem; opacity: 0.8; color: var(--secondary-color);">
+                                Partidas restantes hoy: <span id="daily-games-left" style="font-weight: bold;">--</span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -588,7 +645,8 @@
                 <!-- JUEGO: Ruleta -->
                 <div id="game-screen-ruleta" class="game-screen">
                     <div class="wheel-outer-container">
-                        <button id="casino-fullscreen-btn" class="fullscreen-toggle-btn" title="Pantalla Completa">⛶</button>
+                        <button id="casino-fullscreen-btn" class="fullscreen-toggle-btn"
+                            title="Pantalla Completa">⛶</button>
                         <div class="wheel-pointer"></div>
                         <div class="wheel-container">
                             <div id="wheel-main" class="wheel-main">
@@ -597,8 +655,14 @@
                             <button id="spin-wheel-btn" class="wheel-spin-btn">GIRAR<br>🍀</button>
                         </div>
                     </div>
-                    
-                    <p class="wheel-hint">El primer giro de cada día es <b>GRATIS</b>. <br> Luego cuesta 1 ficha 🪙.</p>
+
+                    <p class="wheel-hint" id="wheel-hint-text">El primer giro de cada día es <b>GRATIS</b>. <br> Luego
+                        cuesta 1 ficha 🪙.</p>
+
+                    <div id="free-spin-countdown-container" class="casino-countdown-container">
+                        <p style="font-size: 0.95rem; opacity: 0.8; font-weight: bold;">⏱️ Próximo giro gratis en:</p>
+                        <div id="free-spin-countdown" class="casino-countdown-timer">00:00:00</div>
+                    </div>
                     <button class="back-to-lobby-btn" id="casino-back-btn">⬅ Volver al Lobby</button>
                 </div>
             </div>
@@ -606,8 +670,10 @@
 
     </main>
     <div class="action-footer" id="journal-footer" style="display: none;">
-        <button type="button" id="journal-like-btn" class="share-btn like-btn" style="display: none;">❤️ <span id="journal-like-count">0</span></button>
-        <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none;">GUARDAR LIBRO 💾</button>
+        <button type="button" id="journal-like-btn" class="share-btn like-btn" style="display: none;">❤️ <span
+                id="journal-like-count">0</span></button>
+        <button type="button" id="save-review-btn" class="share-btn save-btn" style="display: none;">GUARDAR LIBRO
+            💾</button>
         <button type="button" id="share-whatsapp-btn" class="share-btn">COPIAR TEXTO 📋</button>
     </div>
 

@@ -171,6 +171,34 @@
     animation: pulseGlow 2s infinite;
 }
 
+/* CASINO COUNTDOWN TIMER */
+.casino-countdown-container {
+    text-align: center;
+    margin: 15px auto 25px auto;
+    padding: 15px 25px;
+    background: #fff;
+    border: 2px dashed var(--secondary-color);
+    border-radius: 15px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    display: none; /* Controlado por JS */
+    animation: fadeIn 0.5s ease;
+}
+
+.casino-countdown-timer {
+    font-family: var(--font-pill), monospace;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+    background: linear-gradient(135deg, #f9f3e5, #fff);
+    padding: 8px 20px;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    margin-top: 8px;
+    display: inline-block;
+    letter-spacing: 3px;
+    box-shadow: 0 4px 8px rgba(107, 79, 63, 0.15);
+}
+
 .wheel-main {
     width: 100%;
     height: 100%;

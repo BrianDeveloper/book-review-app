@@ -7,7 +7,14 @@ export function initCommunity() {
     const currentUser = State.getKey('currentUser');
     let currentUserFriendIds = window.currentUserFriendIds || {};
 
-const communityFeed = document.getElementById('community-feed');
+    // Declaración de variables de estado locales para el sistema de chat
+    let currentChatFriendId = null;
+    let friendUnreadMessages = {};
+    let chatSubscription = null;
+    let isCurrentlyTyping = false;
+    let typingTimeout = null;
+
+    const communityFeed = document.getElementById('community-feed');
 
     const loadGlobalFeed = async () => {
         if (!communityFeed) return;
@@ -108,6 +115,7 @@ const communityFeed = document.getElementById('community-feed');
     });
 
     const loadFriendSuggestions = async () => {
+        return; // TEMPORALMENTE DESACTIVADO (BUG EN SUGERENCIAS)
         const container = document.getElementById('friend-suggestions-rail');
         const section = document.getElementById('friend-suggestions-section');
         if (!container || !currentUser) return;
@@ -145,10 +153,10 @@ const communityFeed = document.getElementById('community-feed');
             container.innerHTML = suggestions.map(u => {
                 const avatar = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=60`;
                 return `
-                    <div class="suggestion-card">
+                    <div class="suggestion-card" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
                         <img src="${avatar}" class="suggestion-avatar" alt="Avatar">
                         <span class="suggestion-username" title="@${u.username}">@${u.username}</span>
-                        <button class="mini-btn" data-user-id="${u.id}" onclick="sendFriendRequest('${u.id}', this)" style="padding: 2px 8px; font-size: 0.8rem;">
+                        <button class="mini-btn" data-user-id="${u.id}" onclick="event.stopPropagation(); sendFriendRequest('${u.id}', this)" style="padding: 2px 8px; font-size: 0.8rem;">
                             Agregar ➕
                         </button>
                     </div>
@@ -207,10 +215,10 @@ const communityFeed = document.getElementById('community-feed');
             else if (status === 'accepted') btnHtml = `<span style="opacity:0.6; font-size:0.85rem;">✅ Amigos</span>`;
             const avatar = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`;
             return `
-                <div class="friend-search-item">
+                <div class="friend-search-item" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
                     <img src="${avatar}" class="community-avatar" alt="Avatar">
                     <span class="community-username">@${u.username || 'usuario'}</span>
-                    ${btnHtml}
+                    <div onclick="event.stopPropagation()">${btnHtml}</div>
                 </div>`;
         }).join('');
     };
@@ -372,6 +380,9 @@ const communityFeed = document.getElementById('community-feed');
         const listEl = document.getElementById('friends-list');
         if (!listEl || !currentUser) return;
         
+        // Estado de carga inicial para evitar el parpadeo
+        listEl.innerHTML = '<p class="empty-msg" style="font-size: 0.9rem;">Cargando amigos... ⏳</p>';
+        
         const sb = getSupabase();
         try {
             const { data: friendships, error } = await sb
@@ -424,7 +435,7 @@ const communityFeed = document.getElementById('community-feed');
                 const badgeHtml = unreadCount > 0 ? `<span class="friend-chat-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '';
 
                 return `
-                    <div class="friend-mini-item" onclick="openChat('${friendData.id}', '${friendData.username}', '${avatar}')">
+                    <div class="friend-mini-item" onclick="showFriendActions(event, '${friendData.id}', '${friendData.username}', '${avatar}')">
                         <div class="friend-item-wrapper">
                             <img src="${avatar}" class="community-avatar" alt="${friendData.username}">
                             ${badgeHtml}
@@ -566,10 +577,16 @@ const communityFeed = document.getElementById('community-feed');
     const updateFriendListBadges = () => {
         // Esta función actualiza visualmente los badges sin recargar toda la lista
         Object.keys(friendUnreadMessages).forEach(friendId => {
-            const friendItem = document.querySelector(`[onclick*="openChat(\'${friendId}\'"]`);
+            // Buscamos específicamente dentro de la lista de amigos para no chocar con el botón del perfil
+            const friendListContainer = document.getElementById('friends-list');
+            if (!friendListContainer) return;
+            
+            const friendItem = friendListContainer.querySelector(`[onclick*="openChat(\'${friendId}\'"]`);
             if (!friendItem) return;
             
             const wrapper = friendItem.querySelector('.friend-item-wrapper');
+            if (!wrapper) return; // Previene el crash
+            
             let badge = wrapper.querySelector('.friend-chat-badge');
             const count = friendUnreadMessages[friendId];
             

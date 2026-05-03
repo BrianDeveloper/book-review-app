@@ -117,6 +117,8 @@ function renderWheel() {
     wheel.innerHTML = html;
 }
 
+let freeSpinInterval = null;
+
 export function updateCasinoUI() {
     const state = getGlobalState();
     if (!state) return;
@@ -126,9 +128,11 @@ export function updateCasinoUI() {
         tokenDisplay.textContent = state.getKey('casinoTokens') || 0;
     }
 
-    // Actualizar indicador de giro gratis
-    const hint = document.querySelector('.wheel-hint');
-    if (hint) {
+    // Actualizar indicador de giro gratis y contador
+    const hint = document.getElementById('wheel-hint-text');
+    const countdownContainer = document.getElementById('free-spin-countdown-container');
+    
+    if (hint && countdownContainer) {
         const prefs = state.getKey('userPreferences') || {};
         const lastSpinDate = prefs.last_spin_date;
         const today = new Date().toISOString().split('T')[0];
@@ -136,11 +140,51 @@ export function updateCasinoUI() {
         if (lastSpinDate !== today) {
             hint.innerHTML = '<span class="free-badge">✨ GIRO GRATIS DISPONIBLE ✨</span><br>Tu primer giro de hoy no cuesta fichas.';
             hint.classList.add('is-free');
+            countdownContainer.style.display = 'none';
+            if (freeSpinInterval) clearInterval(freeSpinInterval);
         } else {
             hint.innerHTML = 'Ya has usado tu giro gratis hoy.<br>Cada giro adicional cuesta 1 ficha 🪙.';
             hint.classList.remove('is-free');
+            countdownContainer.style.display = 'inline-block';
+            startFreeSpinCountdown();
         }
     }
+}
+
+function startFreeSpinCountdown() {
+    if (freeSpinInterval) clearInterval(freeSpinInterval);
+    
+    const updateTimer = () => {
+        const now = new Date();
+        const tomorrow = new Date();
+        tomorrow.setHours(24, 0, 0, 0); // Media noche local
+        
+        const diff = tomorrow - now;
+        if (diff <= 0) {
+            clearInterval(freeSpinInterval);
+            // El día ha cambiado, actualizar UI forzando nuevo chequeo local
+            const state = getGlobalState();
+            if (state) {
+                const prefs = state.getKey('userPreferences') || {};
+                prefs.last_spin_date = ''; // Truco para simular que no se ha girado hoy
+                state.set({ userPreferences: prefs });
+                updateCasinoUI();
+            }
+            return;
+        }
+
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const timerEl = document.getElementById('free-spin-countdown');
+        if (timerEl) {
+            timerEl.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    };
+
+    updateTimer();
+    freeSpinInterval = setInterval(updateTimer, 1000);
 }
 
 async function buyTokens(qty, price) {
@@ -260,6 +304,10 @@ async function processPrize(prize, wasFree) {
                 avatar_url: current.currentAvatar
             });
         }
+        
+        // Forzar actualización de la UI del casino (incluyendo el contador de giro gratis)
+        updateCasinoUI();
+        
     } catch (err) {
         console.error("Error al persistir premio:", err);
         showToast("Error al guardar tu premio", "error");
