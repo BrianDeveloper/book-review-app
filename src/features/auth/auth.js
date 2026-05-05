@@ -156,7 +156,8 @@ export const fetchUserProfile = async (uid) => {
                     badges: [],
                     preferences: { genres: [], goal: 0, answered_quizzes: [], casino_tokens: 0 },
                     unlocked_items: [],
-                    avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`
+                    avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`,
+                    show_presence: true
                 }
             ], { onConflict: 'id' }).select().single();
 
@@ -186,7 +187,8 @@ export const fetchUserProfile = async (uid) => {
                     userCoins, userXP, userLevel, userBadges, userPreferences,
                     unlockedItems, selectedFrame, selectedTitle, selectedSkin,
                     currentUsername, currentAvatar, currentUser,
-                    casinoTokens: data.preferences?.casino_tokens || 0
+                    casinoTokens: data.preferences?.casino_tokens || 0,
+                    showPresence: data.show_presence !== false
                 });
             }
 
@@ -210,6 +212,11 @@ export const fetchUserProfile = async (uid) => {
                     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = val;
                     else el.textContent = val;
                 }
+            }
+
+            const presenceToggle = document.getElementById('profile-show-presence');
+            if (presenceToggle) {
+                presenceToggle.checked = data.show_presence !== false;
             }
 
             // Mostrar secciones legacy del Dashboard

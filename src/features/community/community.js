@@ -2,6 +2,7 @@ import { getSupabase } from '../../api.js';
 import State from '../../core/State.js';
 import EventBus from '../../core/EventBus.js';
 import { showToast, showModal, hideModal } from '../../utils.js';
+import { isUserOnline, getPresenceHTML } from '../presence/presence.js';
 
 export function initCommunity() {
     const currentUser = State.getKey('currentUser');
@@ -39,7 +40,7 @@ export function initCommunity() {
             if (data && data.length > 0) {
                 // Enriquecer con perfiles secuencialmente
                 const uids = [...new Set(data.map(r => r.user_id))];
-                const { data: profiles } = await sb.from('profiles').select('id, username, avatar_url').in('id', uids);
+                const { data: profiles } = await sb.from('profiles').select('id, username, avatar_url, last_seen, show_presence').in('id', uids);
                 
                 if (profiles) {
                     const pMap = {};
@@ -187,7 +188,7 @@ export function initCommunity() {
         if (!sb || !currentUser) return;
         const { data, error } = await sb
             .from('profiles')
-            .select('id, username, avatar_url')
+            .select('id, username, avatar_url, last_seen, show_presence')
             .ilike('username', `%${query}%`)
             .neq('id', currentUser.id)
             .limit(8);
@@ -214,9 +215,15 @@ export function initCommunity() {
             else if (status === 'pending') btnHtml = `<span style="opacity:0.6; font-size:0.85rem;">Pendiente ⏳</span>`;
             else if (status === 'accepted') btnHtml = `<span style="opacity:0.6; font-size:0.85rem;">✅ Amigos</span>`;
             const avatar = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`;
+            const isOnline = isUserOnline(u.last_seen, u.show_presence);
+            const presenceDot = getPresenceHTML(isOnline);
+            
             return `
                 <div class="friend-search-item" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
-                    <img src="${avatar}" class="community-avatar" alt="Avatar">
+                    <div class="avatar-wrapper">
+                        <img src="${avatar}" class="community-avatar" alt="Avatar">
+                        ${presenceDot}
+                    </div>
                     <span class="community-username">@${u.username || 'usuario'}</span>
                     <div onclick="event.stopPropagation()">${btnHtml}</div>
                 </div>`;
@@ -392,8 +399,8 @@ export function initCommunity() {
                     status,
                     requester_id,
                     addressee_id,
-                    solicitante:profiles!friendships_requester_id_fkey(id, username, avatar_url),
-                    destinatario:profiles!friendships_addressee_id_fkey(id, username, avatar_url)
+                    solicitante:profiles!friendships_requester_id_fkey(id, username, avatar_url, last_seen, show_presence),
+                    destinatario:profiles!friendships_addressee_id_fkey(id, username, avatar_url, last_seen, show_presence)
                 `)
                 .or(`requester_id.eq.${currentUser.id},addressee_id.eq.${currentUser.id}`)
                 .eq('status', 'accepted');
@@ -434,10 +441,14 @@ export function initCommunity() {
                 const unreadCount = friendUnreadMessages[friendData.id] || 0;
                 const badgeHtml = unreadCount > 0 ? `<span class="friend-chat-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '';
 
+                const isOnline = (typeof window.isUserOnline === 'function') ? window.isUserOnline(friendData.last_seen, friendData.show_presence) : false;
+                const presenceDot = (typeof window.getPresenceHTML === 'function') ? window.getPresenceHTML(isOnline) : '';
+
                 return `
-                    <div class="friend-mini-item" onclick="showFriendActions(event, '${friendData.id}', '${friendData.username}', '${avatar}')">
-                        <div class="friend-item-wrapper">
+                    <div class="friend-mini-item" onclick="window.showFriendActions(event, '${friendData.id}', '${friendData.username}', '${avatar}')">
+                        <div class="friend-item-wrapper avatar-wrapper">
                             <img src="${avatar}" class="community-avatar" alt="${friendData.username}">
+                            ${presenceDot}
                             ${badgeHtml}
                         </div>
                         <span class="friend-username-mini">@${friendData.username}</span>
@@ -459,7 +470,22 @@ export function initCommunity() {
         const avatarEl = document.getElementById('chat-friend-avatar');
         const container = document.getElementById('chat-messages-container');
         if (nameEl) nameEl.textContent = `Chat con ${friendName}`;
-        if (avatarEl) avatarEl.src = avatar;
+        if (avatarEl) {
+            avatarEl.src = avatar;
+            // Envolver el avatar del chat en el wrapper de presencia
+            const avatarContainer = avatarEl.parentElement;
+            if (avatarContainer) {
+                avatarContainer.classList.add('avatar-wrapper');
+                // Buscar si ya hay un indicador y actualizarlo o crearlo
+                let dot = avatarContainer.querySelector('.presence-indicator');
+                if (!dot) {
+                    dot = document.createElement('span');
+                    avatarContainer.appendChild(dot);
+                }
+                // Como no tenemos el last_seen aquí directamente, hacemos una consulta rápida o asumimos online si acabamos de abrir
+                dot.className = 'presence-indicator presence-online'; // Por defecto verde al abrir chat
+            }
+        }
         if (container) container.innerHTML = '<p class="empty-msg">Cargando mensajes...</p>';
         showModal(modal);
 

@@ -131,11 +131,14 @@ export function updateCasinoUI() {
     // Actualizar indicador de giro gratis y contador
     const hint = document.getElementById('wheel-hint-text');
     const countdownContainer = document.getElementById('free-spin-countdown-container');
-    
+
     if (hint && countdownContainer) {
         const prefs = state.getKey('userPreferences') || {};
         const lastSpinDate = prefs.last_spin_date;
-        const today = new Date().toISOString().split('T')[0];
+
+        // Obtenemos la fecha local en formato YYYY-MM-DD
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
         if (lastSpinDate !== today) {
             hint.innerHTML = '<span class="free-badge">✨ GIRO GRATIS DISPONIBLE ✨</span><br>Tu primer giro de hoy no cuesta fichas.';
@@ -153,13 +156,14 @@ export function updateCasinoUI() {
 
 function startFreeSpinCountdown() {
     if (freeSpinInterval) clearInterval(freeSpinInterval);
-    
+
+    // Objetivo fijo: Media noche del día actual (00:00 del día siguiente)
+    const targetDate = new Date();
+    targetDate.setHours(24, 0, 0, 0);
+
     const updateTimer = () => {
         const now = new Date();
-        const tomorrow = new Date();
-        tomorrow.setHours(24, 0, 0, 0); // Media noche local
-        
-        const diff = tomorrow - now;
+        const diff = targetDate - now;
         if (diff <= 0) {
             clearInterval(freeSpinInterval);
             // El día ha cambiado, actualizar UI forzando nuevo chequeo local
@@ -176,7 +180,7 @@ function startFreeSpinCountdown() {
         const h = Math.floor(diff / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
-        
+
         const timerEl = document.getElementById('free-spin-countdown');
         if (timerEl) {
             timerEl.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -269,8 +273,12 @@ async function processPrize(prize, wasFree) {
     let updates = { preferences: prefs };
     let message = "";
 
-    if (wasFree) prefs.last_spin_date = new Date().toISOString().split('T')[0];
-    else prefs.casino_tokens = Math.max(0, (prefs.casino_tokens || 0) - 1);
+    if (wasFree) {
+        const now = new Date();
+        prefs.last_spin_date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    } else {
+        prefs.casino_tokens = Math.max(0, (prefs.casino_tokens || 0) - 1);
+    }
 
     if (prize.type === 'coins') {
         updates.coins = (state.getKey('userCoins') || 0) + prize.value;
@@ -304,10 +312,10 @@ async function processPrize(prize, wasFree) {
                 avatar_url: current.currentAvatar
             });
         }
-        
+
         // Forzar actualización de la UI del casino (incluyendo el contador de giro gratis)
         updateCasinoUI();
-        
+
     } catch (err) {
         console.error("Error al persistir premio:", err);
         showToast("Error al guardar tu premio", "error");

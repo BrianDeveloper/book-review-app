@@ -56,8 +56,9 @@
                         </div>
 
                         <div class="user-dropdown">
-                            <div class="frame-wrapper mini-frame" id="nav-frame">
+                            <div class="frame-wrapper mini-frame avatar-wrapper" id="nav-frame">
                                 <button id="profile-btn" class="nav-icon-btn" title="Mi Perfil">👤</button>
+                                <span class="presence-indicator presence-online"></span>
                             </div>
                             <button id="dropdown-toggle-btn" class="dropdown-trigger-btn"
                                 title="Menú de opciones">▼</button>
@@ -79,6 +80,235 @@
             </div>
         </div>
     </nav>
+
+    <!-- VISTA: ADMINISTRACIÓN (SPA) - Fuera del viewport para ancho total -->
+    <div id="admin-view" class="view-content" style="display: none;">
+        <div class="admin-full-layout">
+            <!-- Sidebar Administrativo -->
+            <aside class="admin-sidebar">
+                <div class="sidebar-header">
+                    <span class="icon">🛡️</span>
+                    <h3>Registry Office</h3>
+                </div>
+                <nav class="admin-nav">
+                    <button class="admin-tab-btn active" data-tab="tab-trivia">
+                        <span class="icon">✍️</span> Trivia
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tab-moderation">
+                        <span class="icon">⚖️</span> Moderación
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tab-users">
+                        <span class="icon">👥</span> Usuarios
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tab-suggestions">
+                        <span class="icon">💡</span> Sugerencias
+                    </button>
+                </nav>
+                <div class="sidebar-footer">
+                    <button class="journal-btn secondary-btn" onclick="switchView('dashboard-view')">
+                        ⬅ Volver al Inicio
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Área de Trabajo -->
+            <main class="admin-main-content">
+                <!-- Tab: Gestión de Trivia -->
+                <div id="tab-trivia" class="admin-tab-content">
+                    <header class="section-header">
+                        <h2>Gestión de Trivia ✨</h2>
+                        <p>Crea y administra las preguntas del reto diario.</p>
+                    </header>
+                    
+                    <div class="admin-grid-layout">
+                        <!-- Sección colapsable: Generación Individual -->
+                        <div class="collapsible-section">
+                            <button class="collapsible-header" data-target="ai-single">
+                                <span class="collapsible-icon">▼</span>
+                                <span>Generación Individual ✨</span>
+                            </button>
+                            <div id="ai-single" class="collapsible-content">
+                                <div class="admin-ai-section compact-ai-section">
+                                    <p class="ai-desc">Usa Gemini para crear una pregunta según una temática específica.</p>
+                                    <div class="compact-ai-fields">
+                                        <div class="pill-input">
+                                            <label for="admin-ai-topic">Temática / Libro:</label>
+                                            <input type="text" id="admin-ai-topic" placeholder="Ej: Don Quijote, Sci-Fi, Poesía...">
+                                        </div>
+                                        <div class="pill-input">
+                                            <label for="admin-ai-difficulty">Dificultad:</label>
+                                            <select id="admin-ai-difficulty" class="journal-input">
+                                                <option value="easy">Fácil (10💰)</option>
+                                                <option value="medium" selected>Media (25💰)</option>
+                                                <option value="hard">Difícil (50💰)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button id="admin-generate-ai-btn" class="journal-btn ai-btn">GENERAR CON IA ✨</button>
+                                    <div id="ai-single-result-container" style="display: none; margin-top: 20px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección colapsable: Generación en Lote -->
+                        <div class="collapsible-section">
+                            <button class="collapsible-header" data-target="ai-batch">
+                                <span class="collapsible-icon">▼</span>
+                                <span>Generación en Lote 📋</span>
+                            </button>
+                            <div id="ai-batch" class="collapsible-content">
+                                <div class="admin-batch-section compact-batch-section">
+                                    <p class="ai-desc">Genera múltiples preguntas automáticamente con temas aleatorios.</p>
+                                    <div class="compact-batch-fields">
+                                        <div class="pill-input">
+                                            <label for="ai-batch-topics">Temas (uno por línea):</label>
+                                            <textarea id="ai-batch-topics" rows="5"
+                                                placeholder="Harry Potter\nDon Quijote\n1984\nSherlock Holmes\n\nO déjalo vacío para temas aleatorios 🎲"
+                                                style="width: 100%; font-family: inherit; resize: vertical;"></textarea>
+                                        </div>
+                                        <div style="display: flex; gap: 15px;">
+                                            <div class="pill-input" style="flex: 1;">
+                                                <label for="ai-batch-size">Cantidad:</label>
+                                                <select id="ai-batch-size" class="journal-input batch-select">
+                                                    <option value="6" selected>6 preguntas</option>
+                                                    <option value="12">12 preguntas</option>
+                                                    <option value="18">18 preguntas</option>
+                                                    <option value="30">30 preguntas</option>
+                                                </select>
+                                            </div>
+                                            <div class="pill-input" style="flex: 1;">
+                                                <label for="ai-batch-difficulty">Dificultad:</label>
+                                                <select id="ai-batch-difficulty" class="journal-input batch-select">
+                                                    <option value="mixed" selected>Mixta (Equilibrada)</option>
+                                                    <option value="easy">Fácil (10💰)</option>
+                                                    <option value="medium">Media (25💰)</option>
+                                                    <option value="hard">Difícil (50💰)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button id="ai-batch-generate-btn" class="journal-btn ai-btn">GENERAR LOTE 📋</button>
+                                    <div id="ai-batch-loader" style="display: none;">
+                                        <span class="loader"></span> Generando lote...
+                                    </div>
+                                    <div id="ai-batch-results" style="display: none; margin-top: 20px;">
+                                        <h4>Resultados del Lote 📊</h4>
+                                        <div id="batch-results-container"></div>
+                                        <div style="margin-top: 15px;">
+                                            <button id="batch-save-all-btn" class="journal-btn" style="display: none;">GUARDAR SELECCIONADAS 💾</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección colapsable: Añadir Manual -->
+                        <div class="collapsible-section">
+                            <button class="collapsible-header" data-target="manual-add">
+                                <span class="collapsible-icon">▼</span>
+                                <span>Añadir Pregunta Manual ✍️</span>
+                            </button>
+                            <div id="manual-add" class="collapsible-content">
+                                <form id="admin-trivia-form" class="pill-inputs admin-form-wide">
+                                    <div class="pill-input full-width">
+                                        <label>Pregunta:</label>
+                                        <input type="text" id="admin-q-text" required placeholder="¿Quién escribió... ?">
+                                    </div>
+                                    <div class="admin-options-header">
+                                        <label>Opciones:</label>
+                                        <button type="button" class="add-option-btn">+ Añadir opción</button>
+                                    </div>
+                                    <div id="admin-options-container" class="admin-options-container">
+                                        <div class="pill-input admin-option">
+                                            <input type="text" class="admin-option-text" placeholder="Opción A" required>
+                                            <input type="radio" name="admin-correct" value="0" class="admin-correct-radio" required>
+                                        </div>
+                                        <div class="pill-input admin-option">
+                                            <input type="text" class="admin-option-text" placeholder="Opción B" required>
+                                            <input type="radio" name="admin-correct" value="1" class="admin-correct-radio">
+                                        </div>
+                                    </div>
+                                    <div class="pill-input full-width">
+                                        <label>Recompensa (💰):</label>
+                                        <input type="number" id="admin-q-reward" min="5" max="100" value="25" required>
+                                    </div>
+                                    <button type="submit" class="journal-btn">AÑADIR PREGUNTA</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Sección colapsable: Ver Preguntas -->
+                        <div class="collapsible-section">
+                            <button class="collapsible-header" data-target="view-questions">
+                                <span class="collapsible-icon">▼</span>
+                                <span>Ver Preguntas Existentes 👁️</span>
+                            </button>
+                            <div id="view-questions" class="collapsible-content">
+                                <div class="admin-view-controls">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <p id="admin-questions-count" style="margin: 0; font-size: 0.95rem; opacity: 0.8;">Cargando contador...</p>
+                                        <button id="reload-questions-btn" class="journal-btn" style="width: auto;">🔄 RECARGAR</button>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <div class="pill-input" style="flex: 2; min-width: 200px;">
+                                            <label>🔍 Buscar:</label>
+                                            <input type="text" id="admin-search-questions" placeholder="Texto de la pregunta...">
+                                        </div>
+                                        <div class="pill-input" style="flex: 1; min-width: 150px;">
+                                            <label>⚖️ Filtro:</label>
+                                            <select id="admin-filter-difficulty">
+                                                <option value="all">Todas</option>
+                                                <option value="10">Fácil (10💰)</option>
+                                                <option value="25">Media (25💰)</option>
+                                                <option value="50">Difícil (50💰)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="admin-questions-container">
+                                    <p class="empty-msg">Cargando preguntas...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Moderación -->
+                <div id="tab-moderation" class="admin-tab-content" style="display: none;">
+                    <header class="section-header">
+                        <h2>Moderación de Reseñas ⚖️</h2>
+                        <p>Gestiona el contenido publicado por la comunidad.</p>
+                    </header>
+                    <div id="admin-reviews-list" class="admin-list-container">
+                        <p class="empty-msg">Cargando reseñas...</p>
+                    </div>
+                </div>
+
+                <!-- Tab: Usuarios -->
+                <div id="tab-users" class="admin-tab-content" style="display: none;">
+                    <header class="section-header">
+                        <h2>Gestión de Usuarios 👥</h2>
+                        <p>Administra roles y perfiles de la plataforma.</p>
+                    </header>
+                    <div id="admin-users-list" class="admin-list-container">
+                        <p class="empty-msg">Cargando usuarios...</p>
+                    </div>
+                </div>
+
+                <!-- Tab: Sugerencias -->
+                <div id="tab-suggestions" class="admin-tab-content" style="display: none;">
+                    <header class="section-header">
+                        <h2>Buzón de Ideas 💡</h2>
+                        <p>Propuestas enviadas por los lectores para mejorar la App.</p>
+                        <button id="refresh-suggestions-btn" class="journal-btn" style="width: auto; margin-top: 10px;">🔄 Recargar Buzón</button>
+                    </header>
+                    <div id="admin-suggestions-list" class="admin-list-container">
+                        <p class="empty-msg">Cargando sugerencias...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
 
     <!-- CONTENEDOR PRINCIPAL DE VISTAS (SPA) -->
     <main id="app-viewport" class="view-viewport">
@@ -133,6 +363,7 @@
                         <button id="dash-stats" class="dash-btn">Estadísticas 📊</button>
                         <button id="dash-community" class="dash-btn">Comunidad 🌐</button>
                         <button id="dash-challenges" class="dash-btn">Visitar Tienda 🛒</button>
+                        <button id="open-suggestions-btn" class="dash-btn" style="background: var(--bg-color); border: 2px dashed var(--secondary-color); color: var(--secondary-color);">💡 Sugerencias</button>
                     </div>
                 </div>
             </div>
@@ -155,6 +386,7 @@
                                 </div>
                             </div>
                             <h2 id="public-author-name" class="author-name">Cargando...</h2>
+                            <div id="public-author-last-seen" class="author-last-seen-status"></div>
                             <div id="public-author-title" class="user-cosmetic-title">Lector Novel</div>
                             <div class="author-stats-mini">
                                 <span title="Nivel"><span id="public-author-level">1</span> ⭐</span>
@@ -822,7 +1054,7 @@
             <h2 class="sub-title">Mi Perfil</h2>
             <div class="profile-header">
                 <div class="frame-wrapper" id="profile-frame">
-                    <div class="profile-avatar-container" id="profile-avatar-display">
+                    <div class="profile-avatar-container avatar-wrapper" id="profile-avatar-display">
                         <img id="current-avatar" src="https://via.placeholder.com/100" alt="Avatar">
                     </div>
                 </div>
@@ -901,6 +1133,17 @@
                         <input type="text" id="profile-genres" placeholder="Ej: Fantasía, Terror, Sci-Fi">
                     </div>
                 </div>
+                <div class="privacy-toggle">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: bold; font-family: var(--font-pill);">Estado de Actividad</span>
+                        <span style="font-size: 0.8rem; opacity: 0.7;">Permitir que otros vean si estás conectado</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="profile-show-presence" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
                 <button type="submit" id="save-profile-btn" class="journal-btn">GUARDAR CAMBIOS ✨</button>
             </form>
         </div>
@@ -965,206 +1208,39 @@
         </div>
     </div>
 
-    <!-- Modal de Administración -->
-    <div id="admin-modal" class="modal" style="display: none;">
-        <div class="modal-content journal-page" style="max-width: 800px;">
-            <span class="close-modal" id="close-admin-modal">&times;</span>
-            <h2 class="sub-title">PANEL DE CONTROL 🛡️</h2>
 
-            <div class="admin-tabs">
-                <button class="admin-tab-btn active" data-tab="tab-trivia">Trivia ✍️</button>
-                <button class="admin-tab-btn" data-tab="tab-moderation">Moderación ⚖️</button>
-                <button class="admin-tab-btn" data-tab="tab-users">Usuarios 👥</button>
+
+    <!-- MODAL: BUZÓN DE SUGERENCIAS -->
+    <div id="suggestion-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="hideModal(document.getElementById('suggestion-modal'))">&times;</span>
+            <div class="modal-header-section">
+                <span class="modal-icon">💡</span>
+                <h2>Tu Idea Vale Oro</h2>
+                <p>Ayúdanos a construir la mejor comunidad de lectura.</p>
             </div>
-
-            <!-- Tab: Gestión de Trivia -->
-            <div id="tab-trivia" class="admin-tab-content">
-                <!-- Sección colapsable: Generación Individual -->
-                <div class="collapsible-section">
-                    <button class="collapsible-header" data-target="ai-single">
-                        <span class="collapsible-icon">▼</span>
-                        <span>Generación Individual ✨</span>
-                    </button>
-                    <div id="ai-single" class="collapsible-content">
-                        <div class="admin-ai-section compact-ai-section">
-                            <p class="ai-desc">Usa Gemini para crear una pregunta según una temática específica.</p>
-                            <div class="compact-ai-fields">
-                                <div class="pill-input">
-                                    <label for="admin-ai-topic">Temática / Libro:</label>
-                                    <input type="text" id="admin-ai-topic"
-                                        placeholder="Ej: Don Quijote, Sci-Fi, Poesía...">
-                                </div>
-                                <div class="pill-input">
-                                    <label for="admin-ai-difficulty">Dificultad:</label>
-                                    <select id="admin-ai-difficulty" class="journal-input">
-                                        <option value="easy">Fácil (10💰)</option>
-                                        <option value="medium" selected>Media (25💰)</option>
-                                        <option value="hard">Difícil (50💰)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button id="admin-generate-ai-btn" class="journal-btn ai-btn">GENERAR CON IA ✨</button>
-                            <div id="ai-single-result-container" style="display: none; margin-top: 20px;"></div>
-                        </div>
-                    </div>
+            
+            <form id="suggestion-form">
+                <div class="form-group">
+                    <label>¿Qué categoría define mejor tu idea?</label>
+                    <select id="suggestion-category">
+                        <option value="mejora">Mejora de diseño/función</option>
+                        <option value="bug">Reportar un error</option>
+                        <option value="juego">Nueva idea de juego</option>
+                        <option value="social">Función social</option>
+                        <option value="otro">Otros</option>
+                    </select>
                 </div>
-
-                <!-- Sección colapsable: Generación en Lote -->
-                <div class="collapsible-section">
-                    <button class="collapsible-header" data-target="ai-batch">
-                        <span class="collapsible-icon">▼</span>
-                        <span>Generación en Lote 📋</span>
-                    </button>
-                    <div id="ai-batch" class="collapsible-content">
-                        <div class="admin-batch-section compact-batch-section">
-                            <p class="ai-desc">Genera múltiples preguntas automáticamente con temas aleatorios.</p>
-                            <div class="compact-batch-fields">
-                                <div class="pill-input">
-                                    <label for="ai-batch-topics">Temas (uno por línea):</label>
-                                    <textarea id="ai-batch-topics" rows="5"
-                                        placeholder="Harry Potter\nDon Quijote\n1984\nSherlock Holmes\n\nO déjalo vacío para temas aleatorios 🎲"
-                                        style="width: 100%; font-family: inherit; resize: vertical;"></textarea>
-                                </div>
-                                <div class="pill-input" style="flex: 1;">
-                                    <label for="ai-batch-size">Cantidad:</label>
-                                    <select id="ai-batch-size" class="journal-input batch-select">
-                                        <option value="6" selected>6 preguntas</option>
-                                        <option value="12">12 preguntas</option>
-                                        <option value="18">18 preguntas</option>
-                                        <option value="30">30 preguntas</option>
-                                    </select>
-                                </div>
-                                <div class="pill-input" style="flex: 1;">
-                                    <label for="ai-batch-difficulty">Dificultad:</label>
-                                    <select id="ai-batch-difficulty" class="journal-input batch-select">
-                                        <option value="mixed" selected>Mixta (Equilibrada)</option>
-                                        <option value="easy">Fácil (10💰)</option>
-                                        <option value="medium">Media (25💰)</option>
-                                        <option value="hard">Difícil (50💰)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button id="ai-batch-generate-btn" class="journal-btn ai-btn">GENERAR LOTE 📋</button>
-                            <div id="ai-batch-loader" style="display: none;">
-                                <span class="loader"></span> Generando lote...
-                            </div>
-                            <!-- Resultados del lote -->
-                            <div id="ai-batch-results" style="display: none; margin-top: 20px;">
-                                <h4>Resultados del Lote 📊</h4>
-                                <div id="batch-results-container"></div>
-                                <div style="margin-top: 15px;">
-                                    <button id="batch-save-all-btn" class="journal-btn" style="display: none;">GUARDAR
-                                        SELECCIONADAS 💾</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                
+                <div class="form-group">
+                    <label>Cuéntanos más...</label>
+                    <textarea id="suggestion-text" placeholder="Escribe aquí tu sugerencia de forma clara..." required></textarea>
                 </div>
-
-                <!-- Sección colapsable: Añadir Manual -->
-                <div class="collapsible-section">
-                    <button class="collapsible-header" data-target="manual-add">
-                        <span class="collapsible-icon">▼</span>
-                        <span>Añadir Pregunta Manual ✍️</span>
-                    </button>
-                    <div id="manual-add" class="collapsible-content">
-                        <form id="admin-trivia-form" class="pill-inputs admin-form-wide">
-                            <div class="pill-input full-width">
-                                <label>Pregunta:</label>
-                                <input type="text" id="admin-q-text" required placeholder="¿Quién escribió... ?">
-                            </div>
-                            <div class="admin-options-header">
-                                <label>Opciones:</label>
-                                <button type="button" class="add-option-btn">+ Añadir opción</button>
-                            </div>
-                            <div id="admin-options-container" class="admin-options-container">
-                                <div class="pill-input admin-option">
-                                    <input type="text" class="admin-option-text" placeholder="Opción A" required>
-                                    <input type="radio" name="admin-correct" value="0" class="admin-correct-radio"
-                                        required>
-                                </div>
-                                <div class="pill-input admin-option">
-                                    <input type="text" class="admin-option-text" placeholder="Opción B" required>
-                                    <input type="radio" name="admin-correct" value="1" class="admin-correct-radio">
-                                </div>
-                                <div class="pill-input admin-option">
-                                    <input type="text" class="admin-option-text" placeholder="Opción C" required>
-                                    <input type="radio" name="admin-correct" value="2" class="admin-correct-radio">
-                                </div>
-                                <div class="pill-input admin-option">
-                                    <input type="text" class="admin-option-text" placeholder="Opción D" required>
-                                    <input type="radio" name="admin-correct" value="3" class="admin-correct-radio">
-                                </div>
-                            </div>
-                            <div class="pill-input full-width">
-                                <label>Recompensa (💰):</label>
-                                <input type="number" id="admin-q-reward" min="5" max="100" value="25" required>
-                            </div>
-                            <div class="manual-separator"></div>
-                            <button type="submit" class="journal-btn">AÑADIR PREGUNTA</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Sección colapsable: Ver Preguntas -->
-                <div class="collapsible-section">
-                    <button class="collapsible-header" data-target="view-questions">
-                        <span class="collapsible-icon">▼</span>
-                        <span>Ver Preguntas Existentes 👁️</span>
-                    </button>
-                    <div id="view-questions" class="collapsible-content">
-                        <div class="admin-view-controls"
-                            style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <p id="admin-questions-count" style="margin: 0; font-size: 0.95rem; opacity: 0.8;">
-                                    Cargando contador...</p>
-                                <button id="reload-questions-btn" class="journal-btn"
-                                    style="padding: 8px 16px; font-size: 0.9rem; margin: 0; width: auto;">🔄
-                                    RECARGAR</button>
-                            </div>
-
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <div class="pill-input"
-                                    style="flex: 2; min-width: 200px; margin: 0; padding: 10px 15px;">
-                                    <label style="font-size: 1rem;">🔍 Buscar:</label>
-                                    <input type="text" id="admin-search-questions" placeholder="Texto de la pregunta..."
-                                        style="font-size: 1rem;">
-                                </div>
-                                <div class="pill-input"
-                                    style="flex: 1; min-width: 150px; margin: 0; padding: 10px 15px;">
-                                    <label style="font-size: 1rem;">⚖️ Filtro:</label>
-                                    <select id="admin-filter-difficulty"
-                                        style="width: 100%; background: transparent; border: none; font-family: inherit; font-size: 1rem; color: var(--text-color); outline: none;">
-                                        <option value="all">Todas</option>
-                                        <option value="10">Fácil (10💰)</option>
-                                        <option value="25">Media (25💰)</option>
-                                        <option value="50">Difícil (50💰)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="admin-questions-container">
-                            <p class="empty-msg">Cargando preguntas...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Moderación -->
-            <div id="tab-moderation" class="admin-tab-content" style="display: none;">
-                <h3>Reseñas de la Comunidad</h3>
-                <div id="admin-reviews-list" class="admin-list-container">
-                    <p class="empty-msg">Cargando reseñas...</p>
-                </div>
-            </div>
-
-            <!-- Tab: Usuarios -->
-            <div id="tab-users" class="admin-tab-content" style="display: none;">
-                <h3>Gestión de Usuarios</h3>
-                <div id="admin-users-list" class="admin-list-container">
-                    <p class="empty-msg">Cargando usuarios...</p>
-                </div>
-            </div>
+                
+                <button type="submit" class="save-btn">
+                    ENVIAR MI IDEA 🚀
+                </button>
+            </form>
         </div>
     </div>
 

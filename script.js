@@ -5,6 +5,7 @@ import { triviaGame } from './src/features/games/trivia.js';
 import { memoryGame } from './src/features/games/memory.js';
 import { initAuthUI } from './src/features/auth/auth_ui.js';
 import { initCasino } from './src/features/casino/casino.js';
+import { loadAdminSuggestions } from './src/features/suggestions/suggestions.js';
 
 window.addEventListener('error', function (event) {
     console.error('🔴 GLOBAL ERROR:', event.error);
@@ -127,6 +128,7 @@ function getFriendlyDate(dateObj) {
     if (diffDays < 7) return `hace ${diffDays} d`;
     return dateObj.toLocaleDateString();
 }
+window.getRelativeTimeString = getFriendlyDate;
 
 async function countUnreadNotifications() {
     const sb = getSupabase();
@@ -604,6 +606,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const communityBtn = document.getElementById('community-btn');
     const dropdownToggleBtn = document.getElementById('dropdown-toggle-btn');
     const userDropdown = document.querySelector('.user-dropdown');
+
+    // --- ADMIN SYSTEM SELECTORS ---
+    const adminBtn = document.getElementById('admin-btn');
+    const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
+    const adminTabContents = document.querySelectorAll('.admin-tab-content');
+    const adminTriviaForm = document.getElementById('admin-trivia-form');
+    const adminReviewsList = document.getElementById('admin-reviews-list');
+    const adminUsersList = document.getElementById('admin-users-list');
 
     if (navToggle) {
         navToggle.addEventListener('click', (e) => {
@@ -3026,11 +3036,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     avatar_url = publicUrlData.publicUrl;
                 }
 
+                const showPresence = document.getElementById('profile-show-presence')?.checked !== false;
+
                 const { error } = await sb.from('profiles').upsert({
                     id: currentUser.id,
                     username,
                     avatar_url,
                     bio,
+                    show_presence: showPresence,
                     preferences: { ...userPreferences, goal, genres },
                     updated_at: new Date().toISOString()
                 });
@@ -3937,7 +3950,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const { data, error } = await sb
                 .from('profiles')
-                .select('id, username, xp, level, avatar_url, selected_frame, selected_title')
+                .select('id, username, xp, level, avatar_url, selected_frame, selected_title, last_seen, show_presence')
                 .order('xp', { ascending: false })
                 .limit(10);
 
@@ -3968,7 +3981,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="ranking-item" onclick="window.loadPublicProfile('${u.id}')" style="cursor: pointer;">
                         <div class="ranking-pos ${posClass}">${i + 1}</div>
                         <div class="frame-wrapper mini-frame ${frameClass}">
-                            <img src="${avatar}" class="ranking-avatar" alt="${u.username}">
+                            <div class="avatar-wrapper">
+                                <img src="${avatar}" class="ranking-avatar" alt="${u.username}">
+                                ${window.getPresenceHTML ? window.getPresenceHTML(window.isUserOnline(u.last_seen, u.show_presence)) : ''}
+                            </div>
                         </div>
                         <div class="ranking-info">
                             <span class="ranking-name">@${u.username}</span>
@@ -4188,14 +4204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const status = currentUserFriendIds[review.user_id];
 
             if (!status || status === 'rejected') {
-                // Sin relación previa o rechazada: Permitir agregar
                 addBtnHtml = `<button class="add-friend-mini-btn" data-user-id="${review.user_id}" title="Añadir a amigos">+👥</button>`;
-            } else if (status === 'pending') {
-                // Solicitud en curso: Ocultar o mostrar indicador
-                console.log(`⏳ Solicitud pendiente para: @${profile.username}`);
-            } else if (status === 'accepted') {
-                // Ya son amigos: Ocultar botón
-                console.log(`🕵️ Ocultando botón para amigo detectado: @${profile.username} (${review.user_id})`);
             }
         }
 
@@ -4204,10 +4213,17 @@ document.addEventListener('DOMContentLoaded', () => {
             reviewTextHtml = `<p class="community-review-text">${review.review_text}</p>`;
         }
 
+        // Lógica de presencia (usando funciones globales expuestas en main.js)
+        const isOnline = (typeof window.isUserOnline === 'function') ? window.isUserOnline(profile.last_seen, profile.show_presence) : false;
+        const presenceDot = (typeof window.getPresenceHTML === 'function') ? window.getPresenceHTML(isOnline) : '';
+
         card.innerHTML = `
             <div class="community-user-info" style="display: flex; align-items: center; gap: 8px; position: relative;">
                 <div class="profile-trigger" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <img src="${profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`}" class="community-avatar" alt="Avatar">
+                    <div class="avatar-wrapper">
+                        <img src="${profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=32`}" class="community-avatar" alt="Avatar">
+                        ${presenceDot}
+                    </div>
                     <span class="community-username">@${profile.username || 'lector_anónimo'}</span>
                 </div>
                 ${addBtnHtml}
@@ -4503,16 +4519,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- ADMIN SYSTEM ---
-    const adminModal = document.getElementById('admin-modal');
-    const adminBtn = document.getElementById('admin-btn');
-    const closeAdminBtn = document.getElementById('close-admin-modal');
-    const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
-    const adminTabContents = document.querySelectorAll('.admin-tab-content');
-    const adminTriviaForm = document.getElementById('admin-trivia-form');
-    const adminReviewsList = document.getElementById('admin-reviews-list');
-    const adminUsersList = document.getElementById('admin-users-list');
-
     // Tab Switching
     adminTabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -4526,8 +4532,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (target === 'tab-moderation') loadAdminReviews();
             if (target === 'tab-users') loadAdminUsers();
+            if (target === 'tab-suggestions') loadAdminSuggestions();
         });
     });
+
+    if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+            switchView('admin-view');
+        });
+    }
 
 
 
@@ -4816,8 +4829,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (adminBtn) adminBtn.addEventListener('click', () => showModal(adminModal));
-    if (closeAdminBtn) closeAdminBtn.addEventListener('click', () => hideModal(adminModal));
+    // El adminBtn ya está configurado arriba para switchView('admin-view')
 
     // Initialize collapsible sections
     initCollapsibleSections();
@@ -5293,7 +5305,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Mostrar la vista objetivo
         const targetView = document.getElementById(targetViewId);
+        const appViewport = document.getElementById('app-viewport');
+
         if (targetView) {
+            // Si es la vista de admin, ocultamos el viewport principal para liberar espacio
+            if (targetViewId === 'admin-view' && appViewport) {
+                appViewport.style.display = 'none';
+                document.body.classList.add('admin-mode');
+            } else if (appViewport) {
+                appViewport.style.display = 'flex';
+                document.body.classList.remove('admin-mode');
+            }
+
             targetView.style.display = 'block';
             setTimeout(() => targetView.classList.add('active'), 10);
         }
@@ -5419,7 +5442,26 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('public-author-bio').textContent = profile.bio || "Este autor prefiere mantener su biografía en secreto. 🤫";
             document.getElementById('public-author-level').textContent = profile.level || 1;
             document.getElementById('public-author-avatar').src = profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'A')}&background=ddc9a3&color=6b4f3f&rounded=true&size=150`;
+            
+            // --- NUEVO: ESTADO DE PRESENCIA Y ÚLTIMA CONEXIÓN ---
+            const lastSeenEl = document.getElementById('public-author-last-seen');
+            const avatarContainer = document.querySelector('#public-author-avatar')?.parentElement;
+            
+            const isOnline = (typeof window.isUserOnline === 'function') ? window.isUserOnline(profile.last_seen, profile.show_presence) : false;
+            
+            // Nota: El punto de presencia se ha omitido en esta vista por diseño, ya que se muestra el texto de estado debajo.
 
+            if (lastSeenEl) {
+                if (isOnline) {
+                    lastSeenEl.innerHTML = '<span class="status-online-tag">🟢 En línea ahora</span>';
+                } else if (profile.last_seen && profile.show_presence !== false) {
+                    const timeAgo = window.getRelativeTimeString(new Date(profile.last_seen));
+                    lastSeenEl.innerHTML = `<span class="status-offline-tag">Visto por última vez ${timeAgo}</span>`;
+                } else {
+                    lastSeenEl.innerHTML = '<span class="status-offline-tag">Estado de conexión privado</span>';
+                }
+            }
+            
             // 4. Aplicar Cosméticos (Marcos, Títulos, Skins)
             applyPublicCosmetics(profile);
 

@@ -4,7 +4,18 @@ import * as auth from './features/auth/auth.js';
 import { initAuthUI } from './features/auth/auth_ui.js';
 import * as store from './features/store/store.js';
 import { memoryGame } from './features/games/memory.js';
+import { initSuggestions, loadAdminSuggestions } from './features/suggestions/suggestions.js';
+import { initPresenceTracking, isUserOnline, getPresenceHTML } from './features/presence/presence.js';
+window.loadAdminSuggestions = loadAdminSuggestions;
+window.isUserOnline = isUserOnline;
+window.getPresenceHTML = getPresenceHTML;
 import '../script.js'; // Unificar legacy en el bundle principal
+
+// Inicializar Sugerencias y Presencia
+document.addEventListener('DOMContentLoaded', () => {
+    initSuggestions();
+    initPresenceTracking();
+});
 
 // --- CORE INFRASTRUCTURE ---
 import EventBus from './core/EventBus.js';
