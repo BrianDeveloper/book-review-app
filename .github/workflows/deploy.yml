@@ -39,6 +39,13 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: Verify Environment Variables
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ]; then echo "❌ VITE_SUPABASE_URL is MISSING"; else echo "✅ VITE_SUPABASE_URL is set"; fi
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then echo "❌ VITE_SUPABASE_ANON_KEY is MISSING"; else echo "✅ VITE_SUPABASE_ANON_KEY is set"; fi
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - name: Build
         run: npm run build
         env:
