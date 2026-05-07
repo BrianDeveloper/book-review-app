@@ -1,0 +1,178 @@
+/* --- LOFI PLAYER WIDGET CHIBI (LEFT SIDE) --- */
+.lofi-player {
+    position: fixed;
+    bottom: 30px;
+    left: 0; 
+    background: var(--bg-color);
+    border: 3px solid var(--border-color);
+    border-left: none; 
+    border-radius: 0 35px 35px 0; /* Curvas más pronunciadas chibi */
+    box-shadow: 5px 8px 0px rgba(0,0,0,0.1); /* Sombra dura estilo cartoon */
+    width: 260px;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; /* Transición saltarina (bouncy) */
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+}
+
+.lofi-player.collapsed {
+    transform: translateX(-100%); 
+}
+
+#lofi-toggle-btn {
+    position: absolute;
+    right: -45px; 
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--secondary-color); /* Marrón */
+    color: white; /* Auriculares en blanco */
+    border: 3px solid var(--border-color);
+    border-left: none; 
+    border-radius: 0 20px 20px 0; 
+    width: 45px;
+    height: 70px;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+#lofi-toggle-btn:hover {
+    filter: brightness(1.15); /* Solo se aclara un poquito */
+    width: 50px;
+    right: -50px;
+}
+
+.lofi-content {
+    padding: 20px 20px 20px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: var(--font-journal);
+}
+
+.lofi-header {
+    text-align: center;
+    padding-bottom: 0px;
+}
+
+.lofi-header h4 { 
+    margin: 0; 
+    color: var(--secondary-color);
+    font-size: 1.3rem;
+    font-weight: 800;
+    text-shadow: 1px 1px 0px var(--accent-color);
+}
+
+#lofi-visualizer {
+    background: var(--box-bg);
+    border: 3px solid var(--border-color);
+    border-radius: 18px; /* Visualizador redondeado */
+    width: 100%;
+    height: 45px;
+    display: block;
+    box-sizing: border-box;
+}
+
+.lofi-track-info {
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-color);
+    background: var(--box-bg);
+    border: 2px dashed var(--border-color); /* Toque artesanal/chibi */
+    border-radius: 15px;
+    padding: 6px 10px;
+}
+
+.lofi-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.lofi-controls button {
+    background: var(--box-bg);
+    border: 3px solid var(--border-color);
+    color: var(--text-color);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 50%; /* Botones perfectamente redondos */
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 3px 0px var(--border-color);
+}
+
+.lofi-controls button#lofi-play-btn {
+    background: var(--secondary-color);
+    font-size: 1.4rem;
+    width: 58px;
+    height: 58px;
+    box-shadow: 3px 4px 0px var(--border-color);
+}
+
+.lofi-controls button:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: var(--accent-color);
+}
+
+.lofi-controls button#lofi-play-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+}
+
+.lofi-controls button:active {
+    transform: translateY(2px);
+    box-shadow: 0px 1px 0px var(--border-color);
+}
+
+.lofi-volume {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--box-bg);
+    padding: 6px 15px;
+    border-radius: 20px;
+    border: 3px solid var(--border-color);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+}
+
+/* Custom Chibi Range Slider */
+#lofi-volume-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    background: var(--bg-color);
+    border-radius: 5px;
+    outline: none;
+    border: 2px solid var(--border-color);
+}
+
+#lofi-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    cursor: pointer;
+    border: 3px solid var(--border-color);
+    box-shadow: 1px 2px 0 var(--border-color);
+    transition: transform 0.1s, filter 0.1s;
+}
+
+#lofi-volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    filter: brightness(1.2); /* Solo se aclara un poco sin hacerse transparente */
+}

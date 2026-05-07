@@ -138,3 +138,41 @@ export function resize(ta) {
         ta.style.height = newHeight + 'px';
     }
 }
+// =============================================
+// RENDERIZADO DE CALIFICACIONES (STARS)
+// =============================================
+
+/**
+ * Genera el HTML para mostrar una calificación de estrellas.
+ * Soporta medias estrellas (0.5).
+ */
+export function getRatingStarsHTML(rating, size = 18) {
+    const r = parseFloat(rating) || 0;
+    let html = `<div class="stars-display-wrapper" style="display: flex; gap: 3px; align-items: center; justify-content: center;">`;
+    
+    for (let i = 1; i <= 5; i++) {
+        let fillPercent = 0;
+        if (r >= i) {
+            fillPercent = 100;
+        } else if (r >= i - 0.5) {
+            fillPercent = 50;
+        }
+
+        html += `
+            <div class="star-container-mini" style="width: ${size}px; height: ${size}px; position: relative; display: flex; align-items: center; justify-content: center;">
+                <!-- Estrella de Fondo (Outline) -->
+                <svg viewBox="0 0 24 24" style="width: 100%; height: 100%; fill: none; stroke: var(--border-color); stroke-width: 1.5px; position: absolute;">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <!-- Estrella de Relleno (Clip) -->
+                <div style="width: ${fillPercent}%; height: 100%; overflow: hidden; position: absolute; left: 0; top: 0; display: flex;">
+                    <svg viewBox="0 0 24 24" style="width: ${size}px; height: ${size}px; fill: var(--secondary-color); flex-shrink: 0;">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                </div>
+            </div>`;
+    }
+    
+    html += `</div>`;
+    return html;
+}

@@ -22,11 +22,18 @@ let isSpinning = false;
 // Helper para acceder al estado de forma segura
 const getGlobalState = () => window.AppState;
 
+// Helper para obtener la fecha hoy en formato YYYY-MM-DD (UTC para coincidir con el servidor)
+function getTodayDateString() {
+    const now = new Date();
+    return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+}
+
 export function initCasino() {
     console.log("🎲 Inicializando Casino...");
 
     EventBus.subscribe('STATE_CASINOTOKENS_CHANGED', updateCasinoUI);
     EventBus.subscribe('STATE_USERCOINS_CHANGED', updateCasinoUI);
+    EventBus.subscribe('STATE_USERPREFERENCES_CHANGED', updateCasinoUI);
 
     renderWheel();
 
@@ -34,6 +41,17 @@ export function initCasino() {
         if (e.target.id === 'open-ruleta-btn' || e.target.closest('#open-ruleta-btn')) {
             switchCasinoScreen('game-screen-ruleta');
             setTimeout(renderWheel, 50);
+            
+            // Re-sincronizar al abrir para evitar avisos falsos
+            const sb = getSupabase();
+            const state = getGlobalState();
+            const currentUser = state?.getKey('currentUser');
+            if (sb && currentUser) {
+                sb.from('profiles').select('preferences').eq('id', currentUser.id).single()
+                    .then(({ data, error }) => {
+                        if (!error && data) state.set({ userPreferences: data.preferences });
+                    });
+            }
         }
         if (e.target.id === 'casino-back-btn') {
             switchCasinoScreen('casino-lobby');
@@ -135,10 +153,7 @@ export function updateCasinoUI() {
     if (hint && countdownContainer) {
         const prefs = state.getKey('userPreferences') || {};
         const lastSpinDate = prefs.last_spin_date;
-
-        // Obtenemos la fecha local en formato YYYY-MM-DD
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const today = getTodayDateString();
 
         if (lastSpinDate !== today) {
             hint.innerHTML = '<span class="free-badge">✨ GIRO GRATIS DISPONIBLE ✨</span><br>Tu primer giro de hoy no cuesta fichas.';
@@ -157,9 +172,9 @@ export function updateCasinoUI() {
 function startFreeSpinCountdown() {
     if (freeSpinInterval) clearInterval(freeSpinInterval);
 
-    // Objetivo fijo: Media noche del día actual (00:00 del día siguiente)
+    // Objetivo fijo: Media noche UTC (00:00 UTC)
     const targetDate = new Date();
-    targetDate.setHours(24, 0, 0, 0);
+    targetDate.setUTCHours(24, 0, 0, 0);
 
     const updateTimer = () => {
         const now = new Date();
@@ -225,10 +240,30 @@ async function handleSpinClick() {
     if (isSpinning) return;
     const state = getGlobalState();
     if (!state) return;
+    const sb = getSupabase();
+    const currentUser = state.getKey('currentUser');
+
+    // Sincronizar preferencias con la DB antes de decidir si el giro es gratis
+    // Esto evita que el aviso se quede "trabado" si el estado local está desfasado
+    if (sb && currentUser) {
+        try {
+            console.log("🔄 Verificando disponibilidad de giro gratis en el servidor...");
+            const { data, error } = await sb.from('profiles').select('preferences').eq('id', currentUser.id).single();
+            if (!error && data) {
+                state.set({ userPreferences: data.preferences });
+            }
+        } catch (e) {
+            console.warn("⚠️ No se pudo sincronizar preferencias antes del giro:", e);
+        }
+    }
+
     const prefs = state.getKey('userPreferences') || {};
-    const tokens = prefs.casino_tokens || 0;
-    const today = new Date().toISOString().split('T')[0];
-    const isFree = prefs.last_spin_date !== today;
+    const tokens = (prefs.casino_tokens || 0);
+    const today = getTodayDateString();
+    const lastSpinDate = prefs.last_spin_date;
+    const isFree = lastSpinDate !== today;
+
+    console.log(`🎰 Intento de giro - Hoy: ${today}, Último: ${lastSpinDate}, Gratis: ${isFree}, Fichas: ${tokens}`);
 
     if (!isFree && tokens < 1) {
         showToast('Necesitas 1 ficha para girar 🪙', 'warning');
@@ -269,13 +304,13 @@ async function processPrize(prize, wasFree) {
     const currentUser = state.getKey('currentUser');
     if (!currentUser) return;
 
-    const prefs = state.getKey('userPreferences') || {};
+    // Clonamos para asegurar que StateManager detecte el cambio de referencia
+    const prefs = JSON.parse(JSON.stringify(state.getKey('userPreferences') || {}));
     let updates = { preferences: prefs };
     let message = "";
 
     if (wasFree) {
-        const now = new Date();
-        prefs.last_spin_date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        prefs.last_spin_date = getTodayDateString();
     } else {
         prefs.casino_tokens = Math.max(0, (prefs.casino_tokens || 0) - 1);
     }

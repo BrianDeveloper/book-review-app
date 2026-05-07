@@ -277,7 +277,7 @@ export function initJournal() {
 
                         <p style="font-size: 0.8em; opacity: 0.7;">${review.author || 'Anónimo'}</p>
 
-                        <p style="color: var(--secondary-color); font-weight: bold;">${'⭐'.repeat(Math.floor(review.rating))}${review.rating % 1 !== 0 ? '½' : ''}</p>
+                        <div style="margin-top: 5px;">${window.getRatingStarsHTML(review.rating, 14)}</div>
 
                     `;
 

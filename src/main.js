@@ -6,15 +6,20 @@ import * as store from './features/store/store.js';
 import { memoryGame } from './features/games/memory.js';
 import { initSuggestions, loadAdminSuggestions } from './features/suggestions/suggestions.js';
 import { initPresenceTracking, isUserOnline, getPresenceHTML } from './features/presence/presence.js';
+import { arcadeRankings } from './features/games/rankings.js';
+import { userInventory } from './features/games/inventory.js';
+import { LofiPlayer } from './features/audio/lofiPlayer.js';
+
 window.loadAdminSuggestions = loadAdminSuggestions;
 window.isUserOnline = isUserOnline;
 window.getPresenceHTML = getPresenceHTML;
-import '../script.js'; // Unificar legacy en el bundle principal
+import '../script.js';
 
 // Inicializar Sugerencias y Presencia
 document.addEventListener('DOMContentLoaded', () => {
     initSuggestions();
     initPresenceTracking();
+    userInventory.init();
 });
 
 // --- CORE INFRASTRUCTURE ---
@@ -43,6 +48,7 @@ window.hideModal = utils.hideModal;
 window.showFeedback = utils.showFeedback;
 window.showConfirm = utils.showConfirm;
 window.getFriendlyDate = utils.getFriendlyDate;
+window.getRatingStarsHTML = utils.getRatingStarsHTML;
 window.resize = utils.resize;
 
 // 3. Funciones de Negocio (Wrappers para inyectar estado automáticamente)
@@ -63,6 +69,7 @@ window.initAuthUI = initAuthUI;
 // 4. Catálogos
 window.storeItems = store.storeItems;
 window.memoryGame = memoryGame;
+window.openArcadeRankings = () => arcadeRankings.openRankingModal();
 
 // 5. Estado Global Reactivo (Proxy para script.js) -> Migrando a State.js
 const stateProps = [

@@ -1,6 +1,7 @@
 {
   "scripts": {
     "dev": "vite",
+    "dev:test": "vite --mode test",
     "build": "vite build"
   },
   "devDependencies": {

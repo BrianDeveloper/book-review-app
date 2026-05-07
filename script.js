@@ -218,6 +218,8 @@ window.handleNotificationClick = async (notifId, type, targetId, senderName, sen
                 if (reqTab) reqTab.click();
             }, 400);
         }
+    } else if (type === 'reward') {
+        if (typeof switchView === 'function') switchView('games-view');
     }
 };
 
@@ -614,6 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminTriviaForm = document.getElementById('admin-trivia-form');
     const adminReviewsList = document.getElementById('admin-reviews-list');
     const adminUsersList = document.getElementById('admin-users-list');
+
 
     if (navToggle) {
         navToggle.addEventListener('click', (e) => {
@@ -4197,7 +4200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div');
         card.className = 'community-card';
         card.style.cursor = 'pointer';
-        const stars = review.rating ? '⭐'.repeat(Math.min(Math.round(review.rating), 5)) : '—';
+        const starsHtml = review.rating ? window.getRatingStarsHTML(review.rating, 16) : '<span style="opacity:0.5">—</span>';
 
         let addBtnHtml = '';
         if (isGlobal && currentUser && review.user_id !== currentUser.id) {
@@ -4234,7 +4237,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="community-content">
                 <h4 class="community-title">${review.title || 'Sin Título'}</h4>
                 <p class="community-author">✒️ ${review.author || 'Autor desconocido'}</p>
-                <div class="community-stars">${stars}</div>
+                <div class="community-stars">${starsHtml}</div>
                 ${reviewTextHtml}
             </div>
         `;
@@ -4295,7 +4298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userLiked = !!likeData;
             }
         }
-        const stars = review.rating ? '⭐'.repeat(Math.min(Math.round(review.rating), 5)) : '—';
+        const starsHtml = review.rating ? window.getRatingStarsHTML(review.rating, 24) : '—';
         reviewDetailContent.innerHTML = `
             <div class="review-detail-header" style="justify-content: flex-start; gap: 15px; border-bottom: 2px dashed rgba(107, 79, 63, 0.2); padding-bottom: 10px; margin-bottom: 20px;">
                 <img src="${avatar}" class="community-avatar" alt="Avatar" style="width: 50px; height: 50px;">
@@ -4318,7 +4321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="photo-box" style="margin-bottom: 10px; padding: 5px; border-radius: 8px;">
                             <img src="${review.photo_url || 'https://via.placeholder.com/200x280?text=📖'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" alt="Portada">
                         </div>
-                        <div class="community-stars" style="font-size: 1.5rem; text-align: center;">${stars}</div>
+                        <div class="community-stars" style="font-size: 1.5rem; text-align: center;">${starsHtml}</div>
                         <div class="review-like-bar" style="justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
                             <button id="like-btn-${review.id}" class="like-btn ${userLiked ? 'liked' : ''}" onclick="toggleReviewLike('${review.id}', this)" style="background: var(--bg-paper); border: 2px solid var(--primary-color);">
                                 ${userLiked ? '❤️' : '🤍'} <span id="like-count-${review.id}">${likeCount}</span>
@@ -5328,8 +5331,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Sincronizar inventario si entramos al Arcade
-        if (targetViewId === 'games-view' && window.triviaGame) {
-            window.triviaGame.init();
+        if (targetViewId === 'games-view') {
+            if (window.triviaGame) window.triviaGame.init();
+            if (window.arcadeRankings && typeof window.arcadeRankings.checkPendingClaims === 'function') {
+                window.arcadeRankings.checkPendingClaims();
+            }
         }
 
         // AUTO-RESIZE: Si entramos al diario, forzar ajuste de textareas cargados
@@ -5399,7 +5405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fallback si no hay cache (no debería ocurrir normalmente)
         const sb = getSupabase();
         if (!sb) return;
-        const { data, error } = await sb.from('reviews').select('*').eq('id', reviewId).single();
+        const { data, error } = await sb.from('reviews').select('*, profiles:user_id(username)').eq('id', reviewId).single();
         if (error || !data) {
             if (typeof showToast === 'function') showToast('No se pudo cargar la reseña', 'error');
             return;
@@ -5601,7 +5607,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const { data, error } = await sb
                 .from('reviews')
-                .select('id, title, author, photo_url, review_text, created_at, rating')
+                .select('*, profiles:user_id(username)')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false })
                 .limit(3);
@@ -5629,9 +5635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <h4>${rev.title}</h4>
                             <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 5px;">${rev.author}</p>
                             <div class="mini-review-text">${snippet}</div>
-                            <div style="margin-top: 8px; font-size: 0.9rem;">
-                                ${'⭐'.repeat(Math.floor(rev.rating || 0))}
-                            </div>
+                                ${window.getRatingStarsHTML(rev.rating || 0, 14)}
                         </div>
                     </div>
                 `;

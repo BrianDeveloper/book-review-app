@@ -27,6 +27,10 @@ export const triviaGame = {
     init() {
         console.log('🧠 Trivia Literaria Inicializada');
         this.syncInventory();
+        this.updateLobbyPersistenceUI();
+        if (typeof EventBus !== 'undefined') {
+            EventBus.subscribe('STATE_GAMESTATES_CHANGED', () => this.updateLobbyPersistenceUI());
+        }
     },
 
     async syncInventory() {
@@ -121,9 +125,9 @@ export const triviaGame = {
         if (!sb || !user) return;
 
         try {
-            // Obtener el inicio del día LOCAL en formato ISO para la consulta
+            // Obtener el inicio del día UTC en formato ISO para la consulta
             const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+            startOfDay.setUTCHours(0, 0, 0, 0);
             const isoStart = startOfDay.toISOString();
             
             // 1. Verificar respuestas de hoy para saber aciertos/fallos
@@ -161,7 +165,24 @@ export const triviaGame = {
                 return;
             }
 
-            // 4. Selección estricta por dificultad: 0=Fácil(10), 1=Media(25), 2=Difícil(50)
+            // 4. Verificar si hay una pregunta activa guardada para este usuario (en el servidor)
+            const gameStates = State.getKey('gameStates') || {};
+            const savedQId = gameStates.trivia?.active_question_id;
+
+            if (savedQId) {
+                const savedQ = availablePool.find(q => q.id === savedQId);
+                // Solo recuperamos si la pregunta sigue estando en el pool de disponibles (no respondida)
+                if (savedQ) {
+                    console.log("🌍 Trivia: Recuperando pregunta persistente del servidor:", savedQId);
+                    this.gameState.currentQuestion = savedQ;
+                    this.renderQuestion();
+                    return;
+                } else {
+                    this.updateServerState(null); // Limpiar si ya no es válida
+                }
+            }
+
+            // 5. Selección estricta por dificultad: 0=Fácil(10), 1=Media(25), 2=Difícil(50)
             const targetReward = this.gameState.levels[this.gameState.answeredToday].reward;
             let targetPool = availablePool.filter(q => q.reward === targetReward);
             
@@ -172,6 +193,12 @@ export const triviaGame = {
             }
 
             this.gameState.currentQuestion = targetPool[Math.floor(Math.random() * targetPool.length)];
+            
+            // Guardar para persistencia antes de renderizar
+            if (this.gameState.currentQuestion) {
+                this.updateServerState(this.gameState.currentQuestion.id);
+            }
+
             this.renderQuestion();
 
         } catch (e) {
@@ -326,6 +353,9 @@ export const triviaGame = {
                 is_correct: isCorrect
             });
 
+            // Limpiar persistencia ya que ha sido respondida
+            this.updateServerState(null);
+
             if (isCorrect) {
                 options[idx].classList.add('correct');
                 
@@ -387,7 +417,7 @@ export const triviaGame = {
         const updateTimer = () => {
             const now = new Date();
             const tomorrow = new Date();
-            tomorrow.setHours(24, 0, 0, 0); // Media noche local
+            tomorrow.setUTCHours(24, 0, 0, 0); // Media noche UTC
             
             const diff = tomorrow - now;
             if (diff <= 0) {
@@ -414,6 +444,55 @@ export const triviaGame = {
         const container = document.getElementById('game-canvas');
         if (container) {
             container.innerHTML = `<div class="trivia-message-overlay">${msg}</div>`;
+        }
+    },
+
+    async updateServerState(questionId) {
+        const sb = getSupabase();
+        const user = State.getKey('currentUser');
+        if (!sb || !user) return;
+
+        try {
+            const currentGameStates = State.getKey('gameStates') || {};
+            const newGameStates = {
+                ...currentGameStates,
+                trivia: questionId ? { active_question_id: questionId } : null
+            };
+
+            // Actualización optimista
+            State.set({ gameStates: newGameStates });
+
+            const { error } = await sb
+                .from('profiles')
+                .update({ game_states: newGameStates })
+                .eq('id', user.id);
+
+            if (error) {
+                // Si la columna no existe, fallamos silenciosamente o volvemos a localStorage
+                if (error.message.includes('column "game_states" of relation "profiles" does not exist')) {
+                    console.warn("⚠️ Servidor: La columna game_states no existe. Usando localStorage como respaldo.");
+                    if (questionId) localStorage.setItem(`trivia_active_q_${user.id}`, questionId);
+                    else localStorage.removeItem(`trivia_active_q_${user.id}`);
+                }
+            }
+
+            this.updateLobbyPersistenceUI();
+        } catch (e) {
+            console.error("Error al sincronizar estado de Trivia:", e);
+        }
+    },
+
+    updateLobbyPersistenceUI() {
+        const triviaCard = document.getElementById('play-trivia-btn');
+        if (!triviaCard) return;
+
+        const playBtnText = triviaCard.querySelector('.play-btn-text');
+        const gameStates = State.getKey('gameStates') || {};
+        const hasSavedQ = !!gameStates.trivia?.active_question_id;
+
+        if (playBtnText) {
+            playBtnText.textContent = hasSavedQ ? 'CONTINUAR DESAFÍO ↩️' : '¡JUGAR AHORA!';
+            playBtnText.style.color = hasSavedQ ? 'var(--secondary-color)' : '';
         }
     }
 };

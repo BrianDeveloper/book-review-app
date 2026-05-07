@@ -2,7 +2,7 @@
  * dashboard_ui.js — Renderizado de la interfaz de estadísticas.
  */
 
-import { getFriendlyDate } from '../../utils.js';
+import { getFriendlyDate, getRatingStarsHTML } from '../../utils.js';
 
 export const dashboardUI = {
     /**
@@ -73,7 +73,7 @@ export const dashboardUI = {
                                         </div>
                                     </td>
                                     <td>${getFriendlyDate(rev.created_at)}</td>
-                                    <td class="hide-mobile"><span class="table-rating">${rev.rating}</span></td>
+                                    <td class="hide-mobile">${getRatingStarsHTML(rev.rating, 14)}</td>
                                     <td><span class="table-likes">${rev.likeCount}</span></td>
                                     <td><button class="mini-btn view-review-btn icon-only" onclick="openReviewFromDashboard('${rev.id}')" title="Ver reseña">👁️</button></td>
                                 </tr>

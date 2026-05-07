@@ -69,6 +69,7 @@
                                 <div class="dropdown-divider"></div>
                                 <button id="new-entry-btn" class="dropdown-item">Nueva Entrada ✨</button>
                                 <button id="my-reviews-btn" class="dropdown-item">Mis Libros 📚</button>
+                                <button id="my-inventory-btn" class="dropdown-item">Mi Inventario 🎒</button>
                                 <button id="admin-btn" class="dropdown-item admin-only" style="display: none;">Admin
                                     🛡️</button>
                                 <div class="dropdown-divider"></div>
@@ -103,6 +104,9 @@
                     <button class="admin-tab-btn" data-tab="tab-suggestions">
                         <span class="icon">💡</span> Sugerencias
                     </button>
+                    <button class="admin-tab-btn" data-tab="tab-music">
+                        <span class="icon">🎧</span> Música
+                    </button>
                 </nav>
                 <div class="sidebar-footer">
                     <button class="journal-btn secondary-btn" onclick="switchView('dashboard-view')">
@@ -119,7 +123,7 @@
                         <h2>Gestión de Trivia ✨</h2>
                         <p>Crea y administra las preguntas del reto diario.</p>
                     </header>
-                    
+
                     <div class="admin-grid-layout">
                         <!-- Sección colapsable: Generación Individual -->
                         <div class="collapsible-section">
@@ -129,11 +133,13 @@
                             </button>
                             <div id="ai-single" class="collapsible-content">
                                 <div class="admin-ai-section compact-ai-section">
-                                    <p class="ai-desc">Usa Gemini para crear una pregunta según una temática específica.</p>
+                                    <p class="ai-desc">Usa Gemini para crear una pregunta según una temática específica.
+                                    </p>
                                     <div class="compact-ai-fields">
                                         <div class="pill-input">
                                             <label for="admin-ai-topic">Temática / Libro:</label>
-                                            <input type="text" id="admin-ai-topic" placeholder="Ej: Don Quijote, Sci-Fi, Poesía...">
+                                            <input type="text" id="admin-ai-topic"
+                                                placeholder="Ej: Don Quijote, Sci-Fi, Poesía...">
                                         </div>
                                         <div class="pill-input">
                                             <label for="admin-ai-difficulty">Dificultad:</label>
@@ -144,7 +150,8 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <button id="admin-generate-ai-btn" class="journal-btn ai-btn">GENERAR CON IA ✨</button>
+                                    <button id="admin-generate-ai-btn" class="journal-btn ai-btn">GENERAR CON IA
+                                        ✨</button>
                                     <div id="ai-single-result-container" style="display: none; margin-top: 20px;"></div>
                                 </div>
                             </div>
@@ -158,7 +165,8 @@
                             </button>
                             <div id="ai-batch" class="collapsible-content">
                                 <div class="admin-batch-section compact-batch-section">
-                                    <p class="ai-desc">Genera múltiples preguntas automáticamente con temas aleatorios.</p>
+                                    <p class="ai-desc">Genera múltiples preguntas automáticamente con temas aleatorios.
+                                    </p>
                                     <div class="compact-batch-fields">
                                         <div class="pill-input">
                                             <label for="ai-batch-topics">Temas (uno por línea):</label>
@@ -187,7 +195,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button id="ai-batch-generate-btn" class="journal-btn ai-btn">GENERAR LOTE 📋</button>
+                                    <button id="ai-batch-generate-btn" class="journal-btn ai-btn">GENERAR LOTE
+                                        📋</button>
                                     <div id="ai-batch-loader" style="display: none;">
                                         <span class="loader"></span> Generando lote...
                                     </div>
@@ -195,7 +204,8 @@
                                         <h4>Resultados del Lote 📊</h4>
                                         <div id="batch-results-container"></div>
                                         <div style="margin-top: 15px;">
-                                            <button id="batch-save-all-btn" class="journal-btn" style="display: none;">GUARDAR SELECCIONADAS 💾</button>
+                                            <button id="batch-save-all-btn" class="journal-btn"
+                                                style="display: none;">GUARDAR SELECCIONADAS 💾</button>
                                         </div>
                                     </div>
                                 </div>
@@ -212,7 +222,8 @@
                                 <form id="admin-trivia-form" class="pill-inputs admin-form-wide">
                                     <div class="pill-input full-width">
                                         <label>Pregunta:</label>
-                                        <input type="text" id="admin-q-text" required placeholder="¿Quién escribió... ?">
+                                        <input type="text" id="admin-q-text" required
+                                            placeholder="¿Quién escribió... ?">
                                     </div>
                                     <div class="admin-options-header">
                                         <label>Opciones:</label>
@@ -220,12 +231,16 @@
                                     </div>
                                     <div id="admin-options-container" class="admin-options-container">
                                         <div class="pill-input admin-option">
-                                            <input type="text" class="admin-option-text" placeholder="Opción A" required>
-                                            <input type="radio" name="admin-correct" value="0" class="admin-correct-radio" required>
+                                            <input type="text" class="admin-option-text" placeholder="Opción A"
+                                                required>
+                                            <input type="radio" name="admin-correct" value="0"
+                                                class="admin-correct-radio" required>
                                         </div>
                                         <div class="pill-input admin-option">
-                                            <input type="text" class="admin-option-text" placeholder="Opción B" required>
-                                            <input type="radio" name="admin-correct" value="1" class="admin-correct-radio">
+                                            <input type="text" class="admin-option-text" placeholder="Opción B"
+                                                required>
+                                            <input type="radio" name="admin-correct" value="1"
+                                                class="admin-correct-radio">
                                         </div>
                                     </div>
                                     <div class="pill-input full-width">
@@ -246,13 +261,17 @@
                             <div id="view-questions" class="collapsible-content">
                                 <div class="admin-view-controls">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <p id="admin-questions-count" style="margin: 0; font-size: 0.95rem; opacity: 0.8;">Cargando contador...</p>
-                                        <button id="reload-questions-btn" class="journal-btn" style="width: auto;">🔄 RECARGAR</button>
+                                        <p id="admin-questions-count"
+                                            style="margin: 0; font-size: 0.95rem; opacity: 0.8;">Cargando contador...
+                                        </p>
+                                        <button id="reload-questions-btn" class="journal-btn" style="width: auto;">🔄
+                                            RECARGAR</button>
                                     </div>
                                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                         <div class="pill-input" style="flex: 2; min-width: 200px;">
                                             <label>🔍 Buscar:</label>
-                                            <input type="text" id="admin-search-questions" placeholder="Texto de la pregunta...">
+                                            <input type="text" id="admin-search-questions"
+                                                placeholder="Texto de la pregunta...">
                                         </div>
                                         <div class="pill-input" style="flex: 1; min-width: 150px;">
                                             <label>⚖️ Filtro:</label>
@@ -300,13 +319,73 @@
                     <header class="section-header">
                         <h2>Buzón de Ideas 💡</h2>
                         <p>Propuestas enviadas por los lectores para mejorar la App.</p>
-                        <button id="refresh-suggestions-btn" class="journal-btn" style="width: auto; margin-top: 10px;">🔄 Recargar Buzón</button>
+                        <button id="refresh-suggestions-btn" class="journal-btn"
+                            style="width: auto; margin-top: 10px;">🔄 Recargar Buzón</button>
                     </header>
                     <div id="admin-suggestions-list" class="admin-list-container">
                         <p class="empty-msg">Cargando sugerencias...</p>
                     </div>
                 </div>
+
+                <!-- Tab: Música (Lofi Player) -->
+                <div id="tab-music" class="admin-tab-content" style="display: none;">
+                    <header class="section-header">
+                        <h2>Gestión de Música 🎧</h2>
+                        <p>Sube archivos MP3 sin copyright para el reproductor global.</p>
+                    </header>
+                    <div class="admin-form-wide"
+                        style="max-width: 550px; margin: 0 auto; background: var(--box-bg); padding: 30px; border-radius: 15px; border: 2px dashed var(--border-color); display: flex; flex-direction: column; gap: 20px; box-shadow: inset 0 0 15px rgba(0,0,0,0.02);">
+                        <div class="pill-input full-width"
+                            style="margin-bottom: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                            <label style="min-width: 150px;">🎵 Nombre de la Pista:</label>
+                            <input type="text" id="admin-music-title" placeholder="Ej: Lofi Chill Study ☕" required
+                                style="flex-grow: 1;">
+                        </div>
+                        <div class="pill-input full-width"
+                            style="margin-bottom: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); padding: 5px 20px;">
+                            <label style="min-width: 150px;">📁 Archivo MP3:</label>
+                            <input type="file" id="admin-music-file" accept="audio/mpeg, audio/mp3" required
+                                style="padding: 10px 0; background: transparent; border: none; outline: none; flex-grow: 1; cursor: pointer; font-family: var(--font-journal); color: var(--text-color);">
+                        </div>
+                        <button id="admin-music-upload-btn" class="journal-btn"
+                            style="width: 100%; margin-top: 5px; font-size: 1.1rem; padding: 12px;">SUBIR Y PUBLICAR
+                            🚀</button>
+                        <div id="admin-music-status"
+                            style="text-align: center; margin-top: 0; font-weight: bold; color: var(--secondary-color);">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px;">
+                        <h3
+                            style="border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 20px; color: var(--text-color);">
+                            Biblioteca Actual</h3>
+                        <div id="admin-music-list" class="admin-list-container"
+                            style="max-height: 450px; overflow-y: auto; padding-right: 15px;">
+                            <p class="empty-msg">Cargando biblioteca de música...</p>
+                        </div>
+                    </div>
+                </div>
             </main>
+        </div>
+    </div>
+
+    <!-- MODAL: EDITAR MÚSICA -->
+    <div id="edit-music-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 450px; width: 90%; text-align: center;">
+            <span class="close-modal"
+                onclick="document.getElementById('edit-music-modal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 25px; color: var(--text-color);">✏️ Editar Título</h2>
+
+            <div class="pill-input full-width" style="margin-bottom: 30px; text-align: left;">
+                <label>Nombre:</label>
+                <input type="text" id="edit-music-title-input" placeholder="Nuevo título..." style="font-size: 1.1rem;">
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="cancel-edit-music-btn" class="journal-btn secondary-btn"
+                    style="flex: 1; background: var(--bg-color);">Cancelar</button>
+                <button id="save-edit-music-btn" class="journal-btn" style="flex: 1;">Guardar Cambios</button>
+            </div>
         </div>
     </div>
 
@@ -340,19 +419,22 @@
 
             <div class="dashboard-grid">
                 <div class="dashboard-card news-card">
-                    <h3>📢 Últimas Actualizaciones (v1.1)</h3>
+                    <h3>📢 Últimas Actualizaciones (v1.2)</h3>
                     <ul id="dashboard-news-list"
                         style="list-style: none; padding: 0; font-size: 0.95rem; line-height: 1.5;">
-                        <li style="margin-bottom: 8px;">🎰 <strong>Casino:</strong> Nuevo temporizador automático para
-                            tu giro gratis diario.</li>
-                        <li style="margin-bottom: 8px;">👤 <strong>¡Nuevos Perfiles Públicos!:</strong> Vista dedicada
-                            para explorar a otros usuarios con su fecha de unión, insignias y botón de chat directo.
+                        <li style="margin-bottom: 8px;">🏆 <strong>¡Lunes de Recompensas!</strong>: El Top 3 del Arcade
+                            ahora recibe sus marcos exclusivos y monedas automáticamente cada lunes. ¡A competir!</li>
+                        <li style="margin-bottom: 8px;">🌙 <strong>Juegos Nocturnos</strong>: Tu giro de ruleta y tus
+                            partidas de Arcade ahora se recargan juntos cada medianoche UTC (8:00 PM hora de Venezuela).
+                            ¡La hora perfecta para relajarse!</li>
+                        <li style="margin-bottom: 8px;">✨ <strong>Marcos Premium</strong>: Si logras entrar al podio de
+                            la semana, lucirás nuestros nuevos marcos metálicos pulidos con insignias y animaciones de
+                            brillo.</li>
+                        <li style="margin-bottom: 8px;">🎧 <strong>Lofi player</strong>: ¡Ahora puedes relajarte
+                            mientras lees! Hemos agregado un reproductor de música chill.
                         </li>
-                        <li style="margin-bottom: 8px;">💬 <strong>Chat Estable:</strong> Corrección de bloqueos
-                            visuales y notificaciones mejoradas.</li>
-                        <li style="margin-bottom: 8px;">🕹️ <strong>Arcade:</strong> Interfaz más limpia con contadores
-                            en tiempo real (partidas y comodines).</li>
-                        <li style="margin-bottom: 8px;">🐞 <strong>Bugs:</strong> Corrección de errores menores.</li>
+                        <li style="margin-bottom: 8px;">🐞 <strong>Mejoras</strong>: Corrección de errores menores para
+                            una lectura más fluida.</li>
                     </ul>
                 </div>
 
@@ -363,7 +445,9 @@
                         <button id="dash-stats" class="dash-btn">Estadísticas 📊</button>
                         <button id="dash-community" class="dash-btn">Comunidad 🌐</button>
                         <button id="dash-challenges" class="dash-btn">Visitar Tienda 🛒</button>
-                        <button id="open-suggestions-btn" class="dash-btn" style="background: var(--bg-color); border: 2px dashed var(--secondary-color); color: var(--secondary-color);">💡 Sugerencias</button>
+                        <button id="open-suggestions-btn" class="dash-btn"
+                            style="background: var(--bg-color); border: 2px dashed var(--secondary-color); color: var(--secondary-color);">💡
+                            Sugerencias</button>
                     </div>
                 </div>
             </div>
@@ -734,8 +818,11 @@
         <!-- SECCIÓN: JUEGOS (ARCADE) -->
         <div id="games-view" class="view-content" style="display: none;">
             <div class="arcade-lobby">
-                <div class="arcade-title-container">
+                <div class="arcade-title-container"
+                    style="display: flex; justify-content: center; align-items: center; gap: 20px;">
                     <h2>SALÓN DE JUEGOS 🕹️</h2>
+                    <button onclick="openArcadeRankings()" class="btn-ranking-trigger" title="Ver Ranking Semanal"
+                        style="background: none; border: none; font-size: 1.8rem; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: transform 0.2s ease;">🏆</button>
                 </div>
                 <p style="text-align: center; font-family: var(--font-journal); opacity: 0.8; margin-bottom: 20px;">
                     Gana monedas y demuestra tus conocimientos literarios. Partidas diarias limitadas.
@@ -1219,7 +1306,7 @@
                 <h2>Tu Idea Vale Oro</h2>
                 <p>Ayúdanos a construir la mejor comunidad de lectura.</p>
             </div>
-            
+
             <form id="suggestion-form">
                 <div class="form-group">
                     <label>¿Qué categoría define mejor tu idea?</label>
@@ -1231,12 +1318,13 @@
                         <option value="otro">Otros</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Cuéntanos más...</label>
-                    <textarea id="suggestion-text" placeholder="Escribe aquí tu sugerencia de forma clara..." required></textarea>
+                    <textarea id="suggestion-text" placeholder="Escribe aquí tu sugerencia de forma clara..."
+                        required></textarea>
                 </div>
-                
+
                 <button type="submit" class="save-btn">
                     ENVIAR MI IDEA 🚀
                 </button>
@@ -1244,8 +1332,55 @@
         </div>
     </div>
 
+    <!-- MODAL: RANKINGS ARCADE -->
+    <div id="ranking-modal" class="modal" style="display: none;">
+        <div class="modal-content journal-page" style="max-width: 600px; width: 95%;">
+            <span class="close-modal" onclick="hideModal(document.getElementById('ranking-modal'))">&times;</span>
+            <div id="ranking-modal-body"></div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- REPRODUCTOR DE MÚSICA FLOTANTE -->
+    <div id="lofi-player-widget" class="lofi-player collapsed">
+        <!-- Botón Toggle (Pestaña flotante) -->
+        <button id="lofi-toggle-btn" title="Reproductor de Música">
+            <span class="icon">🎧</span>
+        </button>
+
+        <!-- Contenido del Reproductor -->
+        <div class="lofi-content">
+            <div class="lofi-header">
+                <h4>Lofi Player ☕</h4>
+            </div>
+
+            <!-- Espectrograma Visualizer -->
+            <canvas id="lofi-visualizer" width="220" height="40"></canvas>
+
+            <div class="lofi-track-info">
+                <span id="lofi-track-name">Pausado...</span>
+            </div>
+
+            <div class="lofi-controls">
+                <button id="lofi-prev-btn" title="Anterior">⏮</button>
+                <button id="lofi-play-btn" title="Reproducir">▶️</button>
+                <button id="lofi-next-btn" title="Siguiente">⏭</button>
+                <button id="lofi-loop-btn" title="Repetir Canción"
+                    style="font-size: 1.2rem; opacity: 0.5; transition: all 0.3s;">🔁</button>
+            </div>
+
+            <div class="lofi-volume">
+                <span style="font-size: 0.8rem;">🔈</span>
+                <input type="range" id="lofi-volume-slider" min="0" max="1" step="0.01" value="0.5">
+                <span style="font-size: 0.8rem;">🔊</span>
+            </div>
+
+            <!-- Elemento de Audio Oculto -->
+            <audio id="lofi-audio-element" crossorigin="anonymous"></audio>
+        </div>
+    </div>
 
     <!-- PUNTO DE ENTRADA ÚNICO: Vite empaqueta todo desde aquí -->
     <script type="module" src="./src/main.js"></script>

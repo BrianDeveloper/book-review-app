@@ -32,7 +32,10 @@ const INITIAL_STATE = {
     
     // Trivia (Temporal para compatibilidad legacy, luego pasará a módulo propio local)
     hasAnsweredToday: false,
-    dailyQuestion: null
+    dailyQuestion: null,
+
+    // Persistencia de Juegos en Servidor
+    gameStates: {}
 };
 
 class StateManager {

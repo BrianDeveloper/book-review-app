@@ -15,11 +15,18 @@ import EventBus from '../../core/EventBus.js';
 export const storeItems = [
     // --- MARCOS (Frames) ---
     { id: 'f_vintage', name: 'Marco Vintage', price: 150, type: 'frame', css: 'frame-vintage', icon: '📜' },
-    { id: 'f_gold', name: 'Marco Dorado', price: 350, type: 'frame', css: 'frame-gold', icon: '⭐' },
-    { id: 'f_vintage_pg', name: 'Páginas Antiguas', price: 600, type: 'frame', css: 'frame-vintage-pages', icon: '📖' },
-    { id: 'f_fire', name: 'Marco de Fuego', price: 1200, type: 'frame', css: 'frame-fire', icon: '🔥' },
-    { id: 'f_quill', name: 'Tinta y Pluma', price: 1800, type: 'frame', css: 'frame-quill', icon: '🖋️' },
-    { id: 'f_spellbook', name: 'Grimorio Mágico', price: 3500, type: 'frame', css: 'frame-spellbook', icon: '🔮' },
+    { id: 'f_constellation', name: 'Marco Astral', price: 600, type: 'frame', css: 'frame-astral', icon: '🌌' },
+    { id: 'f_nature', name: 'Naturaleza Viva', price: 800, type: 'frame', css: 'frame-nature', icon: '🌿' },
+    { id: 'f_ice', name: 'Cristal Ártico', price: 1000, type: 'frame', css: 'frame-ice', icon: '❄️' },
+    { id: 'f_vintage_pg', name: 'Páginas Antiguas', price: 1200, type: 'frame', css: 'frame-vintage-pages', icon: '📖' },
+    { id: 'f_fire', name: 'Marco de Fuego', price: 1800, type: 'frame', css: 'frame-fire', icon: '🔥' },
+    { id: 'f_quill', name: 'Tinta y Pluma', price: 2500, type: 'frame', css: 'frame-quill', icon: '🖋️' },
+    { id: 'f_spellbook', name: 'Grimorio Mágico', price: 5000, type: 'frame', css: 'frame-spellbook', icon: '🔮' },
+    
+    // --- MARCOS DE RECOMPENSA (No comprables) ---
+    { id: 'frame_gold_weekly', name: 'Marco de Oro Semanal', price: 0, type: 'frame', category: 'reward', css: 'frame-gold-weekly', icon: '🥇' },
+    { id: 'frame_silver_weekly', name: 'Marco de Plata Semanal', price: 0, type: 'frame', category: 'reward', css: 'frame-silver-weekly', icon: '🥈' },
+    { id: 'frame_bronze_weekly', name: 'Marco de Bronce Semanal', price: 0, type: 'frame', category: 'reward', css: 'frame-bronze-weekly', icon: '🥉' },
 
     // --- COLECCIÓN PRIDE (Precio Unificado: Apoyo) ---
     { id: 'f_pride_gay', name: 'Marco: Orgullo', price: 200, type: 'frame', css: 'frame-pride-gay', icon: '<div class="mini-flag flag-gay"></div>' },
@@ -91,68 +98,70 @@ export function loadStore() {
     if (!grid) return;
 
     const userCoins = State.getKey('userCoins') || 0;
-    const unlockedItems = State.getKey('unlockedItems') || [];
+    
+    // Consultar inventario real desde el servidor o State si lo tenemos
+    checkOwnershipAndRender(grid, userCoins);
+}
 
-    // Actualizar texto de saldo en el Hub
-    const balanceEl = document.getElementById('hub-user-coins');
-    if (balanceEl) {
-        balanceEl.textContent = userCoins;
+export async function checkOwnershipAndRender(grid, userCoins) {
+    const sb = getSupabase();
+    const user = State.getKey('currentUser');
+    if (!sb || !user) return;
+
+    try {
+        const { data: inventory } = await sb.from('user_inventory').select('item_id').eq('user_id', user.id);
+        const ownedIds = (inventory || []).map(i => i.item_id);
+
+        const filtered = storeItems.filter(i => i.type === currentStoreCategory && i.category !== 'reward');
+        grid.innerHTML = '';
+
+        const categoryTitles = {
+            'frame': 'Marcos Literarios 🖼️',
+            'skin': 'Temas Globales 🎨',
+            'title': 'Títulos de Prestigio 🎖️'
+        };
+
+        const header = document.createElement('h4');
+        header.className = 'sub-title';
+        header.style.cssText = 'font-size: 1.3rem; margin: 0 0 15px 0; color: var(--secondary-color); text-align: left; width: 100%; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;';
+        header.textContent = categoryTitles[currentStoreCategory] || 'Tienda';
+        grid.appendChild(header);
+
+        const itemsGrid = document.createElement('div');
+        itemsGrid.className = 'store-items-grid';
+        itemsGrid.style.marginBottom = '25px';
+
+        filtered.forEach(item => {
+            const owned = ownedIds.includes(item.id);
+
+            const card = document.createElement('div');
+            card.className = 'store-item';
+            card.innerHTML = `
+                <div class="item-icon">${item.icon}</div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-price">${item.price} 💰</div>
+                <button class="journal-btn buy-btn ${owned ? 'owned' : ''}" ${owned ? 'disabled' : ''}>
+                    ${owned ? 'OBTENIDO' : 'COMPRAR'}
+                </button>
+            `;
+
+            const btn = card.querySelector('button');
+            if (!owned) {
+                btn.onclick = () => buyItem(item.id);
+            } else {
+                // Si ya es dueño, simplemente mostramos el estado y deshabilitamos
+                btn.textContent = '📦 EN MOCHILA';
+                btn.disabled = true;
+                btn.classList.add('owned');
+            }
+            itemsGrid.appendChild(card);
+        });
+
+        grid.appendChild(itemsGrid);
+    } catch (e) {
+        console.error("Error al cargar propiedad de items:", e);
+        grid.innerHTML = '<p class="error-msg">Error al conectar con el servidor.</p>';
     }
-
-    // Actualizar otros marcadores globales si existen
-    if (typeof window.updateCurrencyUI === 'function') {
-        window.updateCurrencyUI();
-    }
-
-    const filtered = storeItems.filter(i => i.type === currentStoreCategory);
-    grid.innerHTML = '';
-
-    const categoryTitles = {
-        'frame': 'Marcos Literarios 🖼️',
-        'skin': 'Temas Globales 🎨',
-        'title': 'Títulos de Prestigio 🎖️'
-    };
-
-    const header = document.createElement('h4');
-    header.className = 'sub-title';
-    header.style.cssText = 'font-size: 1.3rem; margin: 0 0 15px 0; color: var(--secondary-color); text-align: left; width: 100%; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;';
-    header.textContent = categoryTitles[currentStoreCategory] || 'Tienda';
-    grid.appendChild(header);
-
-    const itemsGrid = document.createElement('div');
-    itemsGrid.className = 'store-items-grid';
-    itemsGrid.style.marginBottom = '25px';
-
-    filtered.forEach(item => {
-        const owned = Array.isArray(unlockedItems)
-            ? unlockedItems.some(ui => (typeof ui === 'string' ? ui === item.id : ui.id === item.id))
-            : false;
-
-        const card = document.createElement('div');
-        card.className = 'store-item';
-        card.innerHTML = `
-            <div class="item-icon">${item.icon}</div>
-            <div class="item-name">${item.name}</div>
-            <div class="item-price">${item.price} 💰</div>
-            <button class="journal-btn buy-btn ${owned ? 'owned' : ''}" ${owned ? 'disabled' : ''}>
-                ${owned ? 'OBTENIDO' : 'COMPRAR'}
-            </button>
-        `;
-
-        const btn = card.querySelector('button');
-        if (!owned) {
-            btn.onclick = () => buyItem(item.id);
-        } else if (item.type !== 'badge') {
-            btn.textContent = 'EQUIPAR 🛡️';
-            btn.disabled = false;
-            btn.classList.remove('owned');
-            btn.style.background = 'var(--secondary-color)';
-            btn.onclick = () => equipItem(item.id, item.type);
-        }
-        itemsGrid.appendChild(card);
-    });
-
-    grid.appendChild(itemsGrid);
 }
 
 // =============================================
@@ -177,25 +186,30 @@ export async function buyItem(itemId) {
 
     try {
         const newCoins = userCoins - item.price;
-        const newItems = [...unlockedItems, item.id];
 
-        const { error } = await sb.from('profiles').update({
-            coins: newCoins,
-            unlocked_items: newItems
+        // 1. Descontar monedas del perfil
+        const { error: coinError } = await sb.from('profiles').update({
+            coins: newCoins
         }).eq('id', currentUser.id);
 
-        if (error) throw error;
+        if (coinError) throw coinError;
 
-        State.set({ userCoins: newCoins, unlockedItems: newItems });
+        // 2. Insertar en el nuevo inventario independiente
+        const { error: invError } = await sb.from('user_inventory').insert({
+            user_id: currentUser.id,
+            item_id: item.id,
+            item_name: item.name,
+            category: 'cosmetico',
+            metadata: { icon: item.icon, css: item.css || null }
+        });
+
+        if (invError) throw invError;
+
+        State.set({ userCoins: newCoins });
         if (typeof window.updateCurrencyUI === 'function') window.updateCurrencyUI();
-        if (typeof window.updateProfileUI === 'function') {
-            const current = State.get();
-            window.updateProfileUI({
-                username: current.currentUsername,
-                avatar_url: current.currentAvatar
-            });
-        }
-        showToast(`¡${item.name} desbloqueado! 🎉`, 'success');
+        
+        showToast(`¡${item.name} añadido a tu inventario! 🎉`, 'success');
+        loadStore();
 
     } catch (e) {
         console.error('❌ Error comprando artículo:', e);
@@ -209,12 +223,26 @@ export const equipItem = async (itemId, type) => {
 
     if (!sb || !currentUser) return;
 
-    let updateData = {};
-    if (type === 'frame') updateData.selected_frame = itemId;
-    else if (type === 'title') updateData.selected_title = itemId;
-    else if (type === 'skin') updateData.selected_skin = itemId;
-
     try {
+        // 1. Sincronizar con el nuevo inventario independiente
+        // Desequipar otros de la misma categoría
+        await sb.from('user_inventory')
+            .update({ is_equipped: false })
+            .eq('user_id', currentUser.id)
+            .eq('category', 'cosmetico'); // Asumimos que la tienda solo vende cosméticos por ahora
+
+        // Equipar el objeto en la tabla de inventario
+        await sb.from('user_inventory')
+            .update({ is_equipped: true })
+            .eq('user_id', currentUser.id)
+            .eq('item_id', itemId);
+
+        // 2. Mantener compatibilidad con la tabla profiles (Legacy)
+        let updateData = {};
+        if (type === 'frame') updateData.selected_frame = itemId;
+        else if (type === 'title') updateData.selected_title = itemId;
+        else if (type === 'skin') updateData.selected_skin = itemId;
+
         const { error } = await sb.from('profiles').update(updateData).eq('id', currentUser.id);
         if (error) throw error;
 
@@ -275,3 +303,4 @@ export const applyCosmetics = () => {
 
 // Autoinicialización para conectar listeners globales al cargar script
 document.addEventListener('DOMContentLoaded', initStore);
+window.applyCosmetics = applyCosmetics;

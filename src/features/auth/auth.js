@@ -180,6 +180,7 @@ export const fetchUserProfile = async (uid) => {
             selectedSkin = data.selected_skin || 'none';
             currentUsername = data.username || currentUser?.user_metadata?.username || 'Lector';
             currentAvatar = data.avatar_url || '';
+            const gameStates = data.game_states || {};
 
             // --- Enviar al State Global ---
             if (window.AppState) {
@@ -188,7 +189,8 @@ export const fetchUserProfile = async (uid) => {
                     unlockedItems, selectedFrame, selectedTitle, selectedSkin,
                     currentUsername, currentAvatar, currentUser,
                     casinoTokens: data.preferences?.casino_tokens || 0,
-                    showPresence: data.show_presence !== false
+                    showPresence: data.show_presence !== false,
+                    gameStates: gameStates
                 });
             }
 

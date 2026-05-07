@@ -48,6 +48,8 @@ export const memoryGame = {
         dailyLimit: 5,
         remainingPlays: 0,
         difficulty: 'normal',
+        elapsedTime: 0,
+        timerInterval: null,
         config: {
             easy: { pairs: 6, cols: 3, reward: 10, bonusThresh: [10, 15] },
             normal: { pairs: 8, cols: 4, reward: 20, bonusThresh: [15, 22] },
@@ -59,6 +61,9 @@ export const memoryGame = {
     init() {
         console.log('🃏 Memorama Inicializado');
         this.renderLobbyInfo();
+        if (typeof EventBus !== 'undefined') {
+            EventBus.subscribe('STATE_GAMESTATES_CHANGED', () => this.updateLobbyPersistenceUI());
+        }
     },
 
     async renderLobbyInfo() {
@@ -77,7 +82,7 @@ export const memoryGame = {
 
         try {
             const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+            startOfDay.setUTCHours(0, 0, 0, 0);
             const isoStart = startOfDay.toISOString();
 
             const { data, error } = await sb.rpc('get_arcade_status', {
@@ -102,10 +107,31 @@ export const memoryGame = {
             } else {
                 limitDisplay.textContent = 'Inicia sesión';
             }
+
+            // --- Actualización de botón "Continuar" ---
+            this.updateLobbyPersistenceUI();
+
         } catch (e) {
             console.error('Error al obtener estado del arcade:', e);
             limitDisplay.textContent = 'Error';
         }
+    },
+
+    updateLobbyPersistenceUI() {
+        const playBtn = document.getElementById('play-memory-btn');
+        const diffSelect = document.getElementById('memory-difficulty');
+        const diffLabel = diffSelect?.previousElementSibling;
+        const gameStates = State.getKey('gameStates') || {};
+        const hasSavedGame = !!gameStates.memory;
+
+        if (playBtn) {
+            playBtn.textContent = hasSavedGame ? 'CONTINUAR PARTIDA ↩️' : '¡JUGAR AHORA!';
+            playBtn.style.background = hasSavedGame ? 'var(--secondary-color)' : '';
+            playBtn.style.color = hasSavedGame ? 'white' : '';
+        }
+
+        if (diffSelect) diffSelect.style.display = hasSavedGame ? 'none' : 'block';
+        if (diffLabel) diffLabel.style.display = hasSavedGame ? 'none' : 'block';
     },
 
     async canPlay() {
@@ -122,6 +148,33 @@ export const memoryGame = {
             return;
         }
 
+        const user = State.get().currentUser;
+        const gameStates = State.getKey('gameStates') || {};
+        const savedState = gameStates.memory;
+
+        if (savedState) {
+            try {
+                console.log("🌍 Memorama: Reanudando partida guardada del servidor...");
+                this.gameState.cards = savedState.cards;
+                this.gameState.moves = savedState.moves;
+                this.gameState.matches = savedState.matches;
+                this.gameState.difficulty = savedState.difficulty;
+                this.gameState.elapsedTime = savedState.elapsedTime || 0;
+                this.gameState.isPlaying = true;
+                this.gameState.flippedCards = []; // Siempre resetear volteadas al cargar
+                
+                this.renderBoard();
+                this.syncBoardVisuals(); // Asegurar que las ya emparejadas se vean bien
+                this.startTimer();
+                
+                this.toggleGameVisibility(true);
+                return;
+            } catch (e) {
+                console.error("Error al cargar partida guardada del servidor:", e);
+                this.updateServerState(null);
+            }
+        }
+
         const diffSelect = document.getElementById('memory-difficulty');
         this.gameState.difficulty = diffSelect ? diffSelect.value : 'normal';
 
@@ -129,15 +182,113 @@ export const memoryGame = {
         this.gameState.flippedCards = [];
         this.gameState.matches = 0;
         this.gameState.moves = 0;
+        this.gameState.elapsedTime = 0;
         this.gameState.isPlaying = true;
 
+        this.saveState(); // Guardar estado inicial
         this.renderBoard();
-        
-        // Ocultar lobby y mostrar juego
+        this.startTimer();
+        this.toggleGameVisibility(true);
+    },
+
+    toggleGameVisibility(show) {
         const lobby = document.querySelector('.arcade-lobby');
         const container = document.getElementById('active-game-container');
-        if (lobby) lobby.style.display = 'none';
-        if (container) container.style.display = 'flex';
+        if (lobby) lobby.style.display = show ? 'none' : 'block';
+        if (container) container.style.display = show ? 'flex' : 'none';
+    },
+
+    saveState() {
+        const stateToSave = {
+            cards: this.gameState.cards,
+            moves: this.gameState.moves,
+            matches: this.gameState.matches,
+            difficulty: this.gameState.difficulty,
+            elapsedTime: this.gameState.elapsedTime
+        };
+        this.updateServerState(stateToSave);
+    },
+
+    startTimer() {
+        if (this.gameState.timerInterval) clearInterval(this.gameState.timerInterval);
+        this.gameState.timerInterval = setInterval(() => {
+            if (!this.gameState.isPlaying) return;
+            this.gameState.elapsedTime++;
+            this.updateTimerUI();
+            // Guardamos el tiempo cada 10 segundos para no saturar, o solo al final/pausa
+            if (this.gameState.elapsedTime % 10 === 0) this.saveState();
+        }, 1000);
+    },
+
+    updateTimerUI() {
+        const timerEl = document.getElementById('mem-timer');
+        if (timerEl) {
+            const mins = Math.floor(this.gameState.elapsedTime / 60);
+            const secs = this.gameState.elapsedTime % 60;
+            timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    },
+
+    async updateServerState(state) {
+        const sb = getSupabase();
+        const user = State.getKey('currentUser');
+        if (!sb || !user) return;
+
+        try {
+            const currentGameStates = State.getKey('gameStates') || {};
+            const newGameStates = {
+                ...currentGameStates,
+                memory: state
+            };
+
+            // Actualización optimista
+            State.set({ gameStates: newGameStates });
+
+            const { error } = await sb
+                .from('profiles')
+                .update({ game_states: newGameStates })
+                .eq('id', user.id);
+
+            if (error && error.message.includes('column "game_states" of relation "profiles" does not exist')) {
+                console.warn("⚠️ Servidor: La columna game_states no existe en profiles. Usando localStorage como respaldo.");
+                if (state) localStorage.setItem(`memory_active_state_${user.id}`, JSON.stringify(state));
+                else localStorage.removeItem(`memory_active_state_${user.id}`);
+            }
+        } catch (e) {
+            console.error("Error al sincronizar estado de Memorama:", e);
+        }
+    },
+
+    syncBoardVisuals() {
+        // Después de renderBoard, aplicar estilos a las cartas que ya están matched
+        const cards = document.querySelectorAll('.memory-card');
+        this.gameState.cards.forEach((card, idx) => {
+            if (card.matched) {
+                const el = cards[idx];
+                const inner = el.querySelector('.memory-card-inner');
+                const back = inner.querySelector('.memory-card-back');
+                
+                inner.style.transform = 'rotateY(180deg)';
+                inner.style.transition = 'none'; // Sin animación al cargar
+                inner.style.boxShadow = '0 0 25px rgba(46, 204, 113, 0.8), inset 0 0 15px rgba(46, 204, 113, 0.3)';
+                back.style.background = '#f0fff4';
+                
+                if (!back.querySelector('.match-check')) {
+                    const check = document.createElement('div');
+                    check.className = 'match-check';
+                    check.innerHTML = '✅';
+                    check.style.position = 'absolute';
+                    check.style.top = '5px';
+                    check.style.right = '5px';
+                    check.style.fontSize = '0.8rem';
+                    back.appendChild(check);
+                }
+            }
+        });
+        
+        document.getElementById('mem-moves').textContent = this.gameState.moves;
+        document.getElementById('mem-matches').textContent = this.gameState.matches;
+        this.updateTimerUI();
     },
 
     generateCards() {
@@ -178,8 +329,9 @@ export const memoryGame = {
         const maxPairs = config.pairs;
 
         container.innerHTML = `
-            <div style="display: flex; justify-content: center; gap: 80px; align-items: center; margin-bottom: 25px; font-family: var(--font-journal); width: 100%; font-size: 1.2rem; font-weight: bold;">
+            <div style="display: flex; justify-content: center; gap: 40px; align-items: center; margin-bottom: 25px; font-family: var(--font-journal); width: 100%; font-size: 1.1rem; font-weight: bold;">
                 <div>Movimientos: <span id="mem-moves">0</span></div>
+                <div>Tiempo: <span id="mem-timer">0:00</span></div>
                 <div>Parejas: <span id="mem-matches">0</span> / ${maxPairs}</div>
             </div>
             <div class="memory-grid" style="display: grid; grid-template-columns: repeat(${config.cols}, 1fr); gap: 12px; width: 100%; max-width: ${config.cols * 150}px; margin: 0 auto;">
@@ -215,6 +367,7 @@ export const memoryGame = {
         if (this.gameState.flippedCards.length === 2) {
             this.gameState.moves++;
             document.getElementById('mem-moves').textContent = this.gameState.moves;
+            this.saveState(); // Guardar tras cada movimiento
             this.checkMatch();
         }
     },
@@ -231,6 +384,7 @@ export const memoryGame = {
             this.gameState.matches++;
             document.getElementById('mem-matches').textContent = this.gameState.matches;
             this.gameState.flippedCards = [];
+            this.saveState(); // Guardar tras encontrar pareja
 
             // Feedback visual de acierto (esperar a que termine el giro 0.6s)
             setTimeout(() => {
@@ -276,6 +430,9 @@ export const memoryGame = {
     },
 
     async victory() {
+        this.gameState.isPlaying = false;
+        if (this.gameState.timerInterval) clearInterval(this.gameState.timerInterval);
+
         // Salir de pantalla completa para que el modal sea visible
         if (document.fullscreenElement) {
             await document.exitFullscreen().catch(err => console.warn("Error al salir de fullscreen:", err));
@@ -305,7 +462,7 @@ export const memoryGame = {
 
         try {
             const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+            startOfDay.setUTCHours(0, 0, 0, 0);
             const isoStart = startOfDay.toISOString();
 
             // Registrar sesión en servidor
@@ -313,6 +470,7 @@ export const memoryGame = {
                 p_game_type: 'memory',
                 p_score: moves,
                 p_reward: reward,
+                p_time_spent: this.gameState.elapsedTime, // Nuevo parámetro de tiempo
                 p_start_of_day: isoStart
             });
 
@@ -322,11 +480,19 @@ export const memoryGame = {
                 // Actualizar estado local
                 State.set({ userCoins: data.new_total_coins });
                 this.gameState.remainingPlays = data.remaining;
+                
+                // Limpiar persistencia ya que la partida terminó
+                this.updateServerState(null);
+                this.updateLobbyPersistenceUI();
+
+                const mins = Math.floor(this.gameState.elapsedTime / 60);
+                const secs = this.gameState.elapsedTime % 60;
+                const timeStr = `${mins}m ${secs}s`;
 
                 setTimeout(() => {
                     window.showConfirm(
                         '¡Victoria Literaria! 🎉',
-                        `Has encontrado todas las parejas en ${moves} movimientos.${bonusText} total: ${reward}💰.`,
+                        `Has encontrado todas las parejas en ${moves} movimientos y un tiempo de ${timeStr}.${bonusText} total: ${reward}💰.`,
                         () => {
                             document.getElementById('back-to-arcade-btn').click();
                             this.renderLobbyInfo();
