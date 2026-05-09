@@ -140,15 +140,36 @@ export const fetchUserProfile = async (uid) => {
     const sb = getSupabase();
     if (!sb || !uid) return;
 
+    // Validación básica de UUID para evitar errores 400 en la base de datos
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    // Algunos UIDs de Supabase Auth pueden no ser v4 estrictos en entornos locales, 
+    // así que usamos una versión más relajada si es necesario, o simplemente comprobamos que no sea "undefined"
+    if (uid === 'undefined' || uid === 'null' || typeof uid !== 'string') {
+        console.warn('⚠️ UID inválido detectado en fetchUserProfile:', uid);
+        return;
+    }
+
     try {
-        // Usamos un query estándar para evitar problemas con maybeSingle en versiones específicas
+        // Usamos limit(1) para obtener un array y evitar el error 406 de .single() cuando no hay filas
         let { data: results, error } = await sb.from('profiles').select('*').eq('id', uid).limit(1);
+        
+        if (error) {
+            console.error('❌ Error de base de datos al buscar perfil:', error);
+            // Si el error es 400, es probable que sea por una columna inexistente o tipo de dato
+            throw error;
+        }
+
         let data = results?.[0] || null;
         
-        // Si el perfil no existe (data es null y no hay error grave), lo creamos
-        if (!data && !error) {
+        // Si el perfil no existe, lo creamos
+        if (!data) {
             console.log('🌱 Usuario nuevo detectado, intentando crear perfil...');
-            const baseUsername = currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || 'Lector';
+            
+            // Aseguramos que tenemos al menos un nombre base
+            const baseUsername = currentUser?.user_metadata?.username || 
+                               currentUser?.email?.split('@')[0] || 
+                               'Lector_' + uid.substring(0, 5);
+            
             let finalUsername = baseUsername;
 
             const newProfile = {
@@ -159,35 +180,44 @@ export const fetchUserProfile = async (uid) => {
                 coins: 0,
                 badges: [],
                 preferences: { genres: [], goal: 0, answered_quizzes: [], casino_tokens: 0 },
-                unlocked_items: [],
                 avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(finalUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`,
-                show_presence: true
+                show_presence: true,
+                game_states: {},
+                role: 'user',
+                jokers: [],
+                last_seen: new Date().toISOString()
             };
 
-            let { data: newData, error: upsertError } = await sb.from('profiles').upsert([newProfile], { onConflict: 'id' }).select();
+            // Intentamos insertar. Usamos insert() en lugar de upsert() para ser más explícitos con nuevos usuarios
+            let { data: insertedData, error: insertError } = await sb.from('profiles').insert([newProfile]).select();
 
-            // Si el error es por conflicto de nombre de usuario (23505) o error de validación (400)
-            if (upsertError && (upsertError.code === '23505' || upsertError.message?.includes('username'))) {
-                console.warn('⚠️ Conflicto de nombre de usuario, reintentando con sufijo...');
-                finalUsername = `${baseUsername}${Math.floor(Math.random() * 9999)}`;
-                newProfile.username = finalUsername;
-                newProfile.avatar_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(finalUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`;
-                
-                const { data: retryData, error: retryError } = await sb.from('profiles').upsert([newProfile], { onConflict: 'id' }).select();
-                if (retryError) throw retryError;
-                newData = retryData;
-            } else if (upsertError) {
-                // Si es un error 406 Not Acceptable, es muy probable que sea un problema de RLS
-                if (upsertError.status === 406 || upsertError.code === '406') {
-                    console.error('❌ Error 406: Posible falta de políticas RLS en la tabla "profiles".');
+            // Manejo de errores de inserción
+            if (insertError) {
+                // Conflicto de username (23505)
+                if (insertError.code === '23505' || insertError.message?.includes('username')) {
+                    console.warn('⚠️ Conflicto de nombre de usuario, reintentando con sufijo...');
+                    finalUsername = `${baseUsername}${Math.floor(Math.random() * 9999)}`;
+                    newProfile.username = finalUsername;
+                    newProfile.avatar_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(finalUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`;
+                    
+                    const { data: retryData, error: retryError } = await sb.from('profiles').insert([newProfile]).select();
+                    if (retryError) throw retryError;
+                    data = retryData?.[0];
+                } 
+                // Error de RLS o similar (403 o 406)
+                else if (insertError.status === 406 || insertError.code === '406') {
+                    console.error('❌ Error 406 en inserción: Posible problema de RLS o esquema.');
+                    // En caso de error crítico de red/RLS, usamos el objeto local para no romper la app
+                    data = newProfile;
                 }
-                throw upsertError;
+                else {
+                    throw insertError;
+                }
+            } else {
+                data = insertedData?.[0] || newProfile;
             }
 
-            data = newData?.[0];
-            console.log('✨ Perfil creado automáticamente para nuevo usuario:', finalUsername);
-        } else if (error) {
-            throw error;
+            console.log('✨ Perfil preparado para nuevo usuario:', finalUsername);
         }
 
         if (data) {
