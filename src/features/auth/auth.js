@@ -193,7 +193,7 @@ export const fetchUserProfile = async (uid) => {
 
             // Manejo de errores de inserción
             if (insertError) {
-                // Conflicto de username (23505)
+                // Caso 1: Conflicto de username (23505 o mensaje)
                 if (insertError.code === '23505' || insertError.message?.includes('username')) {
                     console.warn('⚠️ Conflicto de nombre de usuario, reintentando con sufijo...');
                     finalUsername = `${baseUsername}${Math.floor(Math.random() * 9999)}`;
@@ -204,10 +204,16 @@ export const fetchUserProfile = async (uid) => {
                     if (retryError) throw retryError;
                     data = retryData?.[0];
                 } 
-                // Error de RLS o similar (403 o 406)
+                // Caso 2: Error 409 (Conflicto por ID ya existente - Condición de Carrera)
+                else if (insertError.status === 409 || insertError.code === '409') {
+                    console.log('🔄 Conflicto 409 detectado: El perfil ya fue creado por otra instancia. Recuperando...');
+                    const { data: recoverData, error: recoverError } = await sb.from('profiles').select('*').eq('id', uid).limit(1);
+                    if (recoverError) throw recoverError;
+                    data = recoverData?.[0] || newProfile;
+                }
+                // Caso 3: Error de RLS o similar (403 o 406)
                 else if (insertError.status === 406 || insertError.code === '406') {
                     console.error('❌ Error 406 en inserción: Posible problema de RLS o esquema.');
-                    // En caso de error crítico de red/RLS, usamos el objeto local para no romper la app
                     data = newProfile;
                 }
                 else {
