@@ -56,7 +56,10 @@ async function updatePresence() {
             .eq('id', user.id);
 
         if (error) {
-            console.warn('Presence sync failed:', error.message);
+            // Silenciamos el aviso si es un error de que el perfil aún no existe (típico en el primer segundo de un nuevo usuario)
+            if (error.code !== 'PGRST116' && error.status !== 406) {
+                console.warn('Presence sync failed:', error.message);
+            }
         }
     } catch (err) {
         console.error('Presence error:', err);

@@ -141,29 +141,51 @@ export const fetchUserProfile = async (uid) => {
     if (!sb || !uid) return;
 
     try {
-        let { data, error } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
+        // Usamos un query estándar para evitar problemas con maybeSingle en versiones específicas
+        let { data: results, error } = await sb.from('profiles').select('*').eq('id', uid).limit(1);
+        let data = results?.[0] || null;
         
         // Si el perfil no existe (data es null y no hay error grave), lo creamos
         if (!data && !error) {
-            const defaultUsername = currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || 'Lector';
-            const { data: newData, error: upsertError } = await sb.from('profiles').upsert([
-                {
-                    id: uid,
-                    username: defaultUsername,
-                    xp: 0,
-                    level: 1,
-                    coins: 0,
-                    badges: [],
-                    preferences: { genres: [], goal: 0, answered_quizzes: [], casino_tokens: 0 },
-                    unlocked_items: [],
-                    avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`,
-                    show_presence: true
-                }
-            ], { onConflict: 'id' }).select().single();
+            console.log('🌱 Usuario nuevo detectado, intentando crear perfil...');
+            const baseUsername = currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || 'Lector';
+            let finalUsername = baseUsername;
 
-            if (upsertError) throw upsertError;
-            data = newData;
-            console.log('✨ Perfil creado automáticamente para nuevo usuario:', defaultUsername);
+            const newProfile = {
+                id: uid,
+                username: finalUsername,
+                xp: 0,
+                level: 1,
+                coins: 0,
+                badges: [],
+                preferences: { genres: [], goal: 0, answered_quizzes: [], casino_tokens: 0 },
+                unlocked_items: [],
+                avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(finalUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`,
+                show_presence: true
+            };
+
+            let { data: newData, error: upsertError } = await sb.from('profiles').upsert([newProfile], { onConflict: 'id' }).select();
+
+            // Si el error es por conflicto de nombre de usuario (23505) o error de validación (400)
+            if (upsertError && (upsertError.code === '23505' || upsertError.message?.includes('username'))) {
+                console.warn('⚠️ Conflicto de nombre de usuario, reintentando con sufijo...');
+                finalUsername = `${baseUsername}${Math.floor(Math.random() * 9999)}`;
+                newProfile.username = finalUsername;
+                newProfile.avatar_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(finalUsername)}&background=ddc9a3&color=6b4f3f&rounded=true&size=80`;
+                
+                const { data: retryData, error: retryError } = await sb.from('profiles').upsert([newProfile], { onConflict: 'id' }).select();
+                if (retryError) throw retryError;
+                newData = retryData;
+            } else if (upsertError) {
+                // Si es un error 406 Not Acceptable, es muy probable que sea un problema de RLS
+                if (upsertError.status === 406 || upsertError.code === '406') {
+                    console.error('❌ Error 406: Posible falta de políticas RLS en la tabla "profiles".');
+                }
+                throw upsertError;
+            }
+
+            data = newData?.[0];
+            console.log('✨ Perfil creado automáticamente para nuevo usuario:', finalUsername);
         } else if (error) {
             throw error;
         }
